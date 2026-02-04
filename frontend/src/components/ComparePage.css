@@ -1,0 +1,136 @@
+.compare-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-xl);
+}
+
+.compare-header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+}
+
+.compare-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-sm);
+  letter-spacing: -0.02em;
+}
+
+.compare-header p {
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+}
+
+.compare-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.destinations-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: var(--space-lg);
+  align-items: end;
+}
+
+.vs-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 2.5rem;
+}
+
+.back-to-form {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: var(--space-xl);
+}
+
+.back-to-form:hover {
+  color: var(--color-text);
+  background: var(--color-bg-card);
+}
+
+/* Generating Overlay */
+.generating-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 11, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.generating-content {
+  text-align: center;
+  padding: var(--space-2xl);
+}
+
+.generating-spinner {
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto var(--space-lg);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.generating-content h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-sm);
+}
+
+.generating-content p {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+  .compare-page {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .compare-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .destinations-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .vs-badge {
+    width: 32px;
+    height: 32px;
+    margin: 0 auto;
+  }
+}

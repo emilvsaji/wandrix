@@ -1,0 +1,9 @@
+[
+  {
+    "_id": "test-user-001",
+    "name": "Test User",
+    "email": "test@wandrix.com",
+    "password": "scrypt:32768:8:1$HKw7UXACaqHU43iL$9b4b3ec1fee4b37e41459ad30a80068c6feaf0571dba04ba1894288391446bfc778b57fadcfa29fab2f4107b5c107762feaf90fda31e8436264e08861a793075",
+    "created_at": "2025-01-01T00:00:00"
+  }
+]
