@@ -1,4 +1,6 @@
 from datetime import datetime
+import hashlib
+import json
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -25,17 +27,46 @@ def _build_comparison_key(destination1, destination2):
     return f"{ordered[0]}::{ordered[1]}"
 
 
+def _normalize_preferences(preferences):
+    prefs = dict(preferences or {})
+    normalized = {}
+    for key in sorted(prefs.keys()):
+        value = prefs.get(key)
+        if isinstance(value, str):
+            normalized[key] = value.strip().lower()
+        elif isinstance(value, list):
+            normalized[key] = sorted([
+                item.strip().lower() if isinstance(item, str) else item
+                for item in value
+            ])
+        else:
+            normalized[key] = value
+    return normalized
+
+
+def _build_preferences_key(preferences):
+    normalized = _normalize_preferences(preferences)
+    raw = json.dumps(normalized, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest(), normalized
+
+
 def save_comparison(user_id, destination1, destination2, preferences, result, source='ai', cache_hit=False):
     comparisons = get_comparisons_collection()
     if comparisons is None:
         return None
 
+    preferences_key, normalized_preferences = _build_preferences_key(preferences)
+
     comparison_record = {
         "user_id": user_id,
         "destination1": destination1,
         "destination2": destination2,
+        "destination1_normalized": _normalize_destination_name(destination1),
+        "destination2_normalized": _normalize_destination_name(destination2),
         "comparison_key": _build_comparison_key(destination1, destination2),
         "preferences": preferences,
+        "preferences_normalized": normalized_preferences,
+        "preferences_key": preferences_key,
         "result": result,
         "source": source,
         "cache_hit": cache_hit,
@@ -46,27 +77,58 @@ def save_comparison(user_id, destination1, destination2, preferences, result, so
     return _serialize_document(comparison_record)
 
 
-def get_recent_cached_comparison(destination1, destination2, limit=20):
+def get_cached_comparison(user_id, destination1, destination2, preferences):
     comparisons = get_comparisons_collection()
     if comparisons is None:
         return None
 
     key = _build_comparison_key(destination1, destination2)
-    recent_records = list(
-        comparisons.find({}, {"result": 1, "comparison_key": 1, "destination1": 1, "destination2": 1, "created_at": 1})
-        .sort("created_at", -1)
-        .limit(limit)
+    preferences_key, _ = _build_preferences_key(preferences)
+
+    cached = comparisons.find_one(
+        {
+            "user_id": user_id,
+            "comparison_key": key,
+            "preferences_key": preferences_key,
+        },
+        sort=[("created_at", -1)],
     )
 
-    for item in recent_records:
-        item_key = item.get('comparison_key')
-        if not item_key:
-            item_key = _build_comparison_key(item.get('destination1'), item.get('destination2'))
+    if not cached:
+        return {}
 
-        if item_key == key and item.get('result'):
-            return _serialize_document(item)
+    result = cached.get('result')
+    if not result or (isinstance(result, dict) and result.get('error')):
+        return {}
 
-    return {}
+    return _serialize_document(cached)
+
+
+def get_cached_itinerary(user_id, destination, preferences):
+    itineraries = get_itineraries_collection()
+    if itineraries is None:
+        return None
+
+    preferences_key, _ = _build_preferences_key(preferences)
+    destination_key = _normalize_destination_name(destination)
+
+    cached = itineraries.find_one(
+        {
+            "user_id": user_id,
+            "destination_normalized": destination_key,
+            "preferences_key": preferences_key,
+        },
+        sort=[("created_at", -1)],
+    )
+
+    if not cached:
+        return {}
+
+    itinerary = cached.get('itinerary')
+    if not itinerary or (isinstance(itinerary, dict) and itinerary.get('error')):
+        return {}
+
+    return _serialize_document(cached)
 
 
 def save_itinerary(user_id, destination, preferences, itinerary):
@@ -74,10 +136,15 @@ def save_itinerary(user_id, destination, preferences, itinerary):
     if itineraries is None:
         return None
 
+    preferences_key, normalized_preferences = _build_preferences_key(preferences)
+
     itinerary_record = {
         "user_id": user_id,
         "destination": destination,
+        "destination_normalized": _normalize_destination_name(destination),
         "preferences": preferences,
+        "preferences_normalized": normalized_preferences,
+        "preferences_key": preferences_key,
         "itinerary": itinerary,
         "created_at": datetime.utcnow(),
     }

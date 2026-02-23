@@ -5,7 +5,7 @@ function ComparisonResult({ result, onGenerateItinerary }) {
   if (!result || result.error) {
     return (
       <div className="comparison-error">
-        <p>Unable to compare destinations. Please try again.</p>
+        <p>{typeof result?.error === 'string' ? result.error : 'Unable to compare destinations. Please try again.'}</p>
       </div>
     );
   }

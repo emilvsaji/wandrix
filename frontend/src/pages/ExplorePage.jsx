@@ -6,6 +6,7 @@ import { getDestinationImage } from '../utils/images';
 
 function ExplorePage({ onSelectDestination }) {
   const [destinations, setDestinations] = useState([]);
+  const [destinationsError, setDestinationsError] = useState('');
   const [selectedDestination, setSelectedDestination] = useState(null);
   const [highlights, setHighlights] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +31,22 @@ function ExplorePage({ onSelectDestination }) {
   ];
 
   useEffect(() => {
-    setDestinations(defaultDestinations);
+    const loadDestinations = async () => {
+      try {
+        const data = await api.getPopularDestinations();
+        const fromApi = data?.destinations || [];
+        if (fromApi.length > 0) {
+          setDestinations(fromApi);
+          return;
+        }
+        setDestinations(defaultDestinations);
+      } catch (error) {
+        setDestinations(defaultDestinations);
+        setDestinationsError('Unable to load destinations from database. Showing local list.');
+      }
+    };
+
+    loadDestinations();
   }, []);
 
   // Filter existing destinations
@@ -112,6 +128,7 @@ function ExplorePage({ onSelectDestination }) {
       <div className="explore-header">
         <h1>Explore Destinations</h1>
         <p>Discover amazing places around the world</p>
+        {destinationsError && <p className="search-hint">{destinationsError}</p>}
 
         <form className="search-box" onSubmit={handleSearchSubmit}>
           <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -68,6 +68,14 @@ export const api = {
     return request('/auth/me', { requiresAuth: true });
   },
 
+  updateProfile({ name, avatar_url }) {
+    return request('/auth/profile', {
+      method: 'PUT',
+      requiresAuth: true,
+      body: { name, avatar_url },
+    });
+  },
+
   getWishlist() {
     return request('/auth/wishlist', { requiresAuth: true });
   },

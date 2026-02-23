@@ -409,14 +409,18 @@ def _create_indexes():
         log.debug("Created index on users.email (unique)")
         
         # Comparisons collection indexes
+        _db.comparisons.create_index("user_id")
         _db.comparisons.create_index("created_at")
         _db.comparisons.create_index([("user_id", 1), ("created_at", -1)])
         _db.comparisons.create_index([("comparison_key", 1), ("created_at", -1)])
+        _db.comparisons.create_index([("user_id", 1), ("comparison_key", 1), ("preferences_key", 1), ("created_at", -1)])
         log.debug("Created index on comparisons.created_at")
         
         # Itineraries collection indexes
+        _db.itineraries.create_index("user_id")
         _db.itineraries.create_index([("destination", 1), ("created_at", -1)])
         _db.itineraries.create_index([("user_id", 1), ("created_at", -1)])
+        _db.itineraries.create_index([("user_id", 1), ("destination_normalized", 1), ("preferences_key", 1), ("created_at", -1)])
         log.debug("Created compound index on itineraries")
 
         # Destinations collection indexes

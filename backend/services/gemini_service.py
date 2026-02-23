@@ -1,332 +1,261 @@
 import json
+import logging
 import re
 import time
-from config import Config
-from typing import Dict, Any
+import warnings
+from typing import Any, Dict, List, Optional
 
-try:
-    from google import genai as new_genai
-except Exception:
-    new_genai = None
+warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
+
+import google.generativeai as genai
+from google.api_core.exceptions import NotFound, ResourceExhausted, GoogleAPICallError
+
+from config import Config
+
+
+logger = logging.getLogger(__name__)
+
 
 class GeminiService:
-    """Service for interacting with Google Gemini API"""
-    
+    """Service for interacting with Gemini using google-generativeai SDK."""
+
+    PREFERRED_MODELS = [
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
+        "gemini-1.5-pro-latest",
+        "gemini-1.5-flash-latest",
+    ]
+
     def __init__(self):
-        self.client = None
-        self.legacy_model = None
-        self.provider = None
-        self.model_name = "gemini-2.5-flash"
+        self.model_name: Optional[str] = None
+        self.model = None
 
         if not Config.GEMINI_API_KEY:
-            print("[GeminiService] GEMINI_API_KEY not set. AI endpoints will return an error.")
-            return
-
-        if new_genai is not None:
-            self.client = new_genai.Client(api_key=Config.GEMINI_API_KEY)
-            self.provider = "new"
+            logger.warning("[GeminiService] GEMINI_API_KEY is not configured.")
             return
 
         try:
-            import google.generativeai as legacy_genai
-            legacy_genai.configure(api_key=Config.GEMINI_API_KEY)
-            self.legacy_model = legacy_genai.GenerativeModel("gemini-1.5-flash")
-            self.provider = "legacy"
-            return
-        except Exception:
-            pass
+            genai.configure(api_key=Config.GEMINI_API_KEY)
+            self.model_name = self._select_supported_model()
+            if self.model_name:
+                self.model = genai.GenerativeModel(self.model_name)
+                logger.info("[GeminiService] Initialized model: %s", self.model_name)
+            else:
+                logger.error("[GeminiService] No generateContent-compatible Gemini model found.")
+        except Exception as exc:
+            logger.exception("[GeminiService] Initialization failed: %s", exc)
+            self.model = None
+            self.model_name = None
 
-        print("[GeminiService] No Gemini SDK installed. Install google-genai or google-generativeai.")
-    
-    def _clean_json_response(self, response_text: str) -> str:
-        """Clean and extract JSON from response"""
-        # Remove markdown code blocks if present
-        response_text = re.sub(r'```json\s*', '', response_text)
-        response_text = re.sub(r'```\s*', '', response_text)
-        return response_text.strip()
-    
-    def _parse_json_response(self, response_text: str) -> Dict[Any, Any]:
-        """Parse JSON from response text"""
+    def debug_list_available_models(self) -> List[Dict[str, Any]]:
+        """Return list of available models for debugging."""
+        if not Config.GEMINI_API_KEY:
+            return []
+
+        models = []
+        try:
+            for model in genai.list_models():
+                methods = list(getattr(model, "supported_generation_methods", []) or [])
+                models.append(
+                    {
+                        "name": getattr(model, "name", ""),
+                        "display_name": getattr(model, "display_name", ""),
+                        "supported_generation_methods": methods,
+                    }
+                )
+        except Exception as exc:
+            logger.warning("[GeminiService] Failed to list models: %s", exc)
+
+        return models
+
+    def _select_supported_model(self) -> Optional[str]:
+        """Select a model that supports generateContent."""
+        available = self.debug_list_available_models()
+        if not available:
+            return None
+
+        supported = []
+        for item in available:
+            methods = item.get("supported_generation_methods", [])
+            if any(method.lower() == "generatecontent" for method in methods if isinstance(method, str)):
+                name = item.get("name", "")
+                if name.startswith("models/"):
+                    name = name.split("/", 1)[1]
+                if name:
+                    supported.append(name)
+
+        if not supported:
+            return None
+
+        supported_set = set(supported)
+        for candidate in self.PREFERRED_MODELS:
+            if candidate in supported_set:
+                return candidate
+
+        return supported[0]
+
+    @staticmethod
+    def _clean_json_response(response_text: str) -> str:
+        cleaned = response_text or ""
+        cleaned = re.sub(r"```json\s*", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"```\s*", "", cleaned)
+        return cleaned.strip()
+
+    def _parse_json_response(self, response_text: str) -> Dict[str, Any]:
         cleaned = self._clean_json_response(response_text)
+
         try:
             return json.loads(cleaned)
-        except json.JSONDecodeError as e:
-            print(f"JSON parse error: {e}")
-            print(f"Raw response: {cleaned[:500]}")
-            return {"error": "Failed to parse response", "raw": cleaned}
-    
-    def _generate(self, prompt: str, retries: int = 3) -> str:
-        """Generate content using Gemini API with retry logic"""
-        if self.provider is None:
-            raise RuntimeError(
-                "Gemini SDK not configured. Install google-genai or google-generativeai and set GEMINI_API_KEY."
-            )
+        except json.JSONDecodeError:
+            first = cleaned.find("{")
+            last = cleaned.rfind("}")
+            if first != -1 and last != -1 and last > first:
+                snippet = cleaned[first : last + 1]
+                try:
+                    return json.loads(snippet)
+                except json.JSONDecodeError as exc:
+                    logger.warning("[GeminiService] JSON parse failed after extraction: %s", exc)
 
-        last_error = None
+            logger.warning("[GeminiService] JSON parse failed. Raw preview: %s", cleaned[:300])
+            return {"error": "Failed to parse AI response as JSON"}
+
+    def _generate(self, prompt: str, retries: int = 3) -> str:
+        if self.model is None:
+            raise RuntimeError("Gemini model is not initialized. Check GEMINI_API_KEY and model availability.")
+
+        last_error: Optional[Exception] = None
         for attempt in range(retries):
             try:
-                if self.provider == "new":
-                    response = self.client.models.generate_content(
-                        model=self.model_name,
-                        contents=prompt
-                    )
-                    return response.text
-
-                response = self.legacy_model.generate_content(prompt)
-                return response.text
-            except Exception as e:
-                last_error = e
-                error_str = str(e)
-                print(f"Gemini API error (attempt {attempt + 1}/{retries}): {error_str}")
-                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
-                    wait_time = 30 * (attempt + 1)
-                    print(f"Rate limited. Waiting {wait_time} seconds...")
-                    time.sleep(wait_time)
+                response = self.model.generate_content(prompt)
+                text = getattr(response, "text", None)
+                if not text:
+                    raise RuntimeError("Gemini returned empty response")
+                return text
+            except NotFound as exc:
+                logger.error("[GeminiService] Model not found: %s", exc)
+                self.model_name = self._select_supported_model()
+                if not self.model_name:
+                    raise RuntimeError("No supported Gemini model available for generateContent") from exc
+                self.model = genai.GenerativeModel(self.model_name)
+                last_error = exc
+            except ResourceExhausted as exc:
+                last_error = exc
+                wait_time = 2 * (attempt + 1)
+                logger.warning("[GeminiService] Rate limit hit, retrying in %ss", wait_time)
+                time.sleep(wait_time)
+            except GoogleAPICallError as exc:
+                last_error = exc
+                logger.error("[GeminiService] Google API call error: %s", exc)
+                if attempt < retries - 1:
+                    time.sleep(1.5 * (attempt + 1))
                 else:
-                    raise e
-        
-        raise last_error if last_error else Exception("Failed after retries")
-    
-    async def get_destination_info(self, destination: str) -> Dict[Any, Any]:
-        """Get detailed information about a tourist destination"""
-        prompt = f"""
-        Provide detailed tourist information about {destination} in JSON format.
-        Include the following fields:
-        {{
-            "name": "destination name",
-            "country": "country name",
-            "description": "brief description (2-3 sentences)",
-            "climate": "climate description",
-            "best_seasons": ["list of best seasons to visit"],
-            "estimated_daily_cost": {{
-                "budget": "estimated cost in USD for budget travelers",
-                "mid_range": "estimated cost in USD for mid-range travelers",
-                "luxury": "estimated cost in USD for luxury travelers"
-            }},
-            "top_attractions": ["list of 5-7 top attractions"],
-            "local_cuisine": ["list of 5 famous local dishes"],
-            "cultural_significance": "cultural importance and history",
-            "unique_experiences": ["list of 5 unique experiences"],
-            "accessibility": "accessibility information for travelers",
-            "safety_rating": "safety level (1-10)",
-            "tourist_friendliness": "how tourist-friendly the destination is"
-        }}
-        Return ONLY valid JSON, no additional text.
-        """
-        
-        try:
-            response_text = self._generate(prompt)
-            return self._parse_json_response(response_text)
-        except Exception as e:
-            print(f"Gemini API error: {e}")
-            return {"error": str(e)}
-    
-    async def compare_destinations(
-        self, 
-        dest1: str, 
-        dest2: str, 
-        preferences: Dict[str, Any]
-    ) -> Dict[Any, Any]:
-        """Compare two destinations based on user preferences"""
-        prompt = f"""
-        You are an expert travel advisor. Compare these two tourist destinations based on the user's preferences.
-        
-        Destination 1: {dest1}
-        Destination 2: {dest2}
-        
-        User Preferences:
-        - Budget: {preferences.get('budget', 'medium')}
-        - Travel Duration: {preferences.get('travel_duration', 7)} days
-        - Interests: {', '.join(preferences.get('interests', ['general tourism']))}
-        - Preferred Season: {preferences.get('season', 'any')}
-        - Travel Type: {preferences.get('travel_type', 'solo')}
-        - Accessibility Needs: {preferences.get('accessibility_needs', 'none')}
-        
-        Provide a comprehensive comparison in the following JSON format:
-        {{
-            "destination1": {{
-                "name": "{dest1}",
-                "scores": {{
-                    "budget_match": 0-10,
-                    "weather_suitability": 0-10,
-                    "attractions_match": 0-10,
-                    "accessibility": 0-10,
-                    "unique_experiences": 0-10,
-                    "safety": 0-10
-                }},
-                "total_score": 0-60,
-                "pros": ["list of 3-4 advantages"],
-                "cons": ["list of 2-3 disadvantages"],
-                "estimated_total_cost": "estimated total trip cost in USD",
-                "best_time_to_visit": "best time based on preferences",
-                "highlights": ["3 must-do activities"]
-            }},
-            "destination2": {{
-                "name": "{dest2}",
-                "scores": {{
-                    "budget_match": 0-10,
-                    "weather_suitability": 0-10,
-                    "attractions_match": 0-10,
-                    "accessibility": 0-10,
-                    "unique_experiences": 0-10,
-                    "safety": 0-10
-                }},
-                "total_score": 0-60,
-                "pros": ["list of 3-4 advantages"],
-                "cons": ["list of 2-3 disadvantages"],
-                "estimated_total_cost": "estimated total trip cost in USD",
-                "best_time_to_visit": "best time based on preferences",
-                "highlights": ["3 must-do activities"]
-            }},
-            "recommendation": {{
-                "winner": "name of recommended destination",
-                "reasoning": "detailed explanation (3-4 sentences) of why this destination is better suited for the user",
-                "key_deciding_factors": ["list of 3 main factors that led to this recommendation"]
-            }}
-        }}
-        
-        Consider all user preferences carefully and provide honest, helpful recommendations.
-        Return ONLY valid JSON, no additional text.
-        """
-        
-        try:
-            response_text = self._generate(prompt)
-            return self._parse_json_response(response_text)
-        except Exception as e:
-            print(f"Gemini API error: {e}")
-            return {"error": str(e)}
-    
-    async def generate_itinerary(
-        self, 
-        destination: str, 
-        preferences: Dict[str, Any]
-    ) -> Dict[Any, Any]:
-        """Generate a personalized day-wise travel itinerary"""
-        duration = preferences.get('travel_duration', 7)
-        budget = preferences.get('budget', 'medium')
-        interests = preferences.get('interests', ['general tourism'])
-        travel_type = preferences.get('travel_type', 'solo')
-        
-        prompt = f"""
-        Create a detailed {duration}-day travel itinerary for {destination}.
-        
-        User Preferences:
-        - Budget Level: {budget}
-        - Interests: {', '.join(interests)}
-        - Travel Type: {travel_type}
-        - Duration: {duration} days
-        
-        Generate a comprehensive itinerary in the following JSON format:
-        {{
-            "destination": "{destination}",
-            "duration_days": {duration},
-            "overview": "Brief trip overview (2-3 sentences)",
-            "best_time_to_visit": "recommended time to visit",
-            "days": [
-                {{
-                    "day_number": 1,
-                    "title": "Day theme/title",
-                    "morning": {{
-                        "activity": "activity description",
-                        "location": "specific location/attraction",
-                        "duration": "estimated time",
-                        "tips": "helpful tip"
-                    }},
-                    "afternoon": {{
-                        "activity": "activity description",
-                        "location": "specific location/attraction",
-                        "duration": "estimated time",
-                        "tips": "helpful tip"
-                    }},
-                    "evening": {{
-                        "activity": "activity description",
-                        "location": "specific location/attraction",
-                        "duration": "estimated time",
-                        "tips": "helpful tip"
-                    }},
-                    "meals": {{
-                        "breakfast": "restaurant/food recommendation",
-                        "lunch": "restaurant/food recommendation",
-                        "dinner": "restaurant/food recommendation"
-                    }},
-                    "estimated_daily_cost": "cost in USD"
-                }}
-            ],
-            "total_estimated_cost": "total trip cost in USD",
-            "packing_list": ["list of 8-10 essential items to pack"],
-            "important_tips": ["list of 5-6 important travel tips"],
-            "local_phrases": [
-                {{"phrase": "local greeting", "meaning": "English meaning"}},
-                {{"phrase": "thank you in local language", "meaning": "Thank you"}}
-            ],
-            "emergency_contacts": {{
-                "police": "emergency number",
-                "ambulance": "emergency number",
-                "tourist_helpline": "tourist helpline if available"
-            }}
-        }}
-        
-        Make the itinerary realistic, practical, and aligned with the user's interests and budget.
-        Include specific place names, restaurants, and activities.
-        Return ONLY valid JSON, no additional text.
-        """
-        
-        try:
-            response_text = self._generate(prompt)
-            return self._parse_json_response(response_text)
-        except Exception as e:
-            print(f"Gemini API error: {e}")
-            return {"error": str(e)}
-    
-    async def get_destination_highlights(self, destination: str) -> Dict[Any, Any]:
-        """Get special highlights and unique features of a destination"""
-        prompt = f"""
-        Provide the special highlights and unique features of {destination} as a tourist destination.
-        
-        Return the information in the following JSON format:
-        {{
-            "destination": "{destination}",
-            "tagline": "catchy tagline for the destination",
-            "cultural_highlights": {{
-                "history": "brief historical significance",
-                "traditions": ["list of 3-4 unique traditions"],
-                "festivals": ["list of 3 major festivals with brief descriptions"],
-                "art_and_architecture": "notable art and architectural features"
-            }},
-            "famous_attractions": [
-                {{
-                    "name": "attraction name",
-                    "description": "brief description",
-                    "why_visit": "why it's special",
-                    "best_time": "best time to visit"
-                }}
-            ],
-            "culinary_experiences": {{
-                "must_try_dishes": ["list of 5 must-try local dishes with descriptions"],
-                "food_markets": ["list of 2-3 famous food markets"],
-                "dining_experiences": ["list of 2-3 unique dining experiences"]
-            }},
-            "exclusive_experiences": [
-                {{
-                    "experience": "unique experience name",
-                    "description": "what makes it special",
-                    "best_for": "type of traveler it suits"
-                }}
-            ],
-            "hidden_gems": ["list of 3-4 lesser-known attractions"],
-            "photo_spots": ["list of 4-5 best photography locations"],
-            "local_tips": ["list of 5 insider tips from locals"]
-        }}
-        
-        Return ONLY valid JSON, no additional text.
-        """
-        
-        try:
-            response_text = self._generate(prompt)
-            return self._parse_json_response(response_text)
-        except Exception as e:
-            print(f"Gemini API error: {e}")
-            return {"error": str(e)}
+                    raise
+            except Exception as exc:
+                last_error = exc
+                logger.exception("[GeminiService] Unexpected error while generating content: %s", exc)
+                if attempt < retries - 1:
+                    time.sleep(1)
+                else:
+                    raise
 
-# Create singleton instance
+        raise RuntimeError(str(last_error) if last_error else "Gemini request failed")
+
+    def _build_json_prompt(self, instruction: str, schema: str) -> str:
+        return (
+            f"{instruction}\n\n"
+            "Return response as STRICT JSON only.\n"
+            "No markdown. No prose outside JSON.\n"
+            f"JSON schema expectation:\n{schema}\n"
+        )
+
+    async def get_destination_info(self, destination: str) -> Dict[str, Any]:
+        prompt = self._build_json_prompt(
+            instruction=(
+                f"Provide detailed tourist information for {destination}."
+            ),
+            schema=(
+                '{"name":"","country":"","description":"","climate":"",'
+                '"best_seasons":[],"estimated_daily_cost":{"budget":"","mid_range":"","luxury":""},'
+                '"top_attractions":[],"local_cuisine":[],"cultural_significance":"",'
+                '"unique_experiences":[],"accessibility":"","safety_rating":"","tourist_friendliness":""}'
+            ),
+        )
+
+        try:
+            response_text = self._generate(prompt)
+            return self._parse_json_response(response_text)
+        except Exception as exc:
+            logger.error("[GeminiService] get_destination_info failed: %s", exc)
+            return {"error": str(exc)}
+
+    async def compare_destinations(self, dest1: str, dest2: str, preferences: Dict[str, Any]) -> Dict[str, Any]:
+        prompt = self._build_json_prompt(
+            instruction=(
+                "You are an expert travel advisor. Compare two destinations based on user preferences. "
+                f"Destination 1: {dest1}. Destination 2: {dest2}. "
+                f"Preferences: {json.dumps(preferences, ensure_ascii=False)}"
+            ),
+            schema=(
+                '{"destination1":{"name":"","scores":{"budget_match":0,"weather_suitability":0,'
+                '"attractions_match":0,"accessibility":0,"unique_experiences":0,"safety":0},'
+                '"total_score":0,"pros":[],"cons":[],"estimated_total_cost":"",'
+                '"best_time_to_visit":"","highlights":[]},'
+                '"destination2":{"name":"","scores":{"budget_match":0,"weather_suitability":0,'
+                '"attractions_match":0,"accessibility":0,"unique_experiences":0,"safety":0},'
+                '"total_score":0,"pros":[],"cons":[],"estimated_total_cost":"",'
+                '"best_time_to_visit":"","highlights":[]},'
+                '"recommendation":{"winner":"","reasoning":"","key_deciding_factors":[]}}'
+            ),
+        )
+
+        try:
+            response_text = self._generate(prompt)
+            return self._parse_json_response(response_text)
+        except Exception as exc:
+            logger.error("[GeminiService] compare_destinations failed: %s", exc)
+            return {"error": str(exc)}
+
+    async def generate_itinerary(self, destination: str, preferences: Dict[str, Any]) -> Dict[str, Any]:
+        prompt = self._build_json_prompt(
+            instruction=(
+                f"Generate a practical travel itinerary for {destination} using preferences: "
+                f"{json.dumps(preferences, ensure_ascii=False)}"
+            ),
+            schema=(
+                '{"destination":"","duration_days":0,"overview":"","best_time_to_visit":"",'
+                '"days":[{"day_number":1,"title":"","morning":{"activity":"","location":"","duration":"","tips":""},'
+                '"afternoon":{"activity":"","location":"","duration":"","tips":""},'
+                '"evening":{"activity":"","location":"","duration":"","tips":""},'
+                '"meals":{"breakfast":"","lunch":"","dinner":""},"estimated_daily_cost":""}],'
+                '"total_estimated_cost":"","packing_list":[],"important_tips":[],'
+                '"local_phrases":[],"emergency_contacts":{"police":"","ambulance":"","tourist_helpline":""}}'
+            ),
+        )
+
+        try:
+            response_text = self._generate(prompt)
+            return self._parse_json_response(response_text)
+        except Exception as exc:
+            logger.error("[GeminiService] generate_itinerary failed: %s", exc)
+            return {"error": str(exc)}
+
+    async def get_destination_highlights(self, destination: str) -> Dict[str, Any]:
+        prompt = self._build_json_prompt(
+            instruction=f"Provide tourist highlights for {destination}.",
+            schema=(
+                '{"destination":"","tagline":"","cultural_highlights":{"history":"",'
+                '"traditions":[],"festivals":[],"art_and_architecture":""},'
+                '"famous_attractions":[],"culinary_experiences":{"must_try_dishes":[],"food_markets":[],"dining_experiences":[]},'
+                '"exclusive_experiences":[],"hidden_gems":[],"photo_spots":[],"local_tips":[]}'
+            ),
+        )
+
+        try:
+            response_text = self._generate(prompt)
+            return self._parse_json_response(response_text)
+        except Exception as exc:
+            logger.error("[GeminiService] get_destination_highlights failed: %s", exc)
+            return {"error": str(exc)}
+
+
 gemini_service = GeminiService()

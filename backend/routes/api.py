@@ -10,7 +10,8 @@ from services.gemini_service import gemini_service
 from services.user_data_service import (
     save_comparison,
     save_itinerary,
-    get_recent_cached_comparison,
+    get_cached_comparison,
+    get_cached_itinerary,
     get_user_comparison_history,
     get_user_itinerary_history,
     get_user_itinerary_by_id,
@@ -121,30 +122,21 @@ def compare_destinations():
         payload = ComparisonRequest.model_validate(request.get_json() or {})
         user_id = get_current_user_id()
 
-        cached = get_recent_cached_comparison(
-            payload.destination1,
-            payload.destination2,
-            limit=20,
+        preferences_data = payload.preferences.model_dump()
+
+        cached = get_cached_comparison(
+            user_id=user_id,
+            destination1=payload.destination1,
+            destination2=payload.destination2,
+            preferences=preferences_data,
         )
         if cached is None:
             return error_response('Database not available', 500)
 
         if cached:
-            comparison_record = save_comparison(
-                user_id=user_id,
-                destination1=payload.destination1,
-                destination2=payload.destination2,
-                preferences=payload.preferences.model_dump(),
-                result=cached.get('result'),
-                source='cache',
-                cache_hit=True,
-            )
-            if comparison_record is None:
-                return error_response('Database not available', 500)
-
             return success_response(
-                {"comparison": comparison_record, "cache_hit": True},
-                'Comparison fetched from recent cache',
+                {"comparison": cached, "cache_hit": True},
+                'Loaded from cache',
                 200,
             )
 
@@ -152,15 +144,18 @@ def compare_destinations():
             gemini_service.compare_destinations(
                 payload.destination1,
                 payload.destination2,
-                payload.preferences.model_dump(),
+                preferences_data,
             )
         )
+
+        if isinstance(result, dict) and result.get('error'):
+            return error_response(result.get('error') or 'Failed to compare destinations', 502)
 
         comparison_record = save_comparison(
             user_id=user_id,
             destination1=payload.destination1,
             destination2=payload.destination2,
-            preferences=payload.preferences.model_dump(),
+            preferences=preferences_data,
             result=result,
             source='ai',
             cache_hit=False,
@@ -170,7 +165,7 @@ def compare_destinations():
 
         return success_response(
             {"comparison": comparison_record, "cache_hit": False},
-            'Comparison created successfully',
+            'Generated new result',
             201,
         )
     except ValidationError as e:
@@ -185,26 +180,45 @@ def generate_itinerary():
     try:
         payload = ItineraryGenerateRequest.model_validate(request.get_json() or {})
         user_id = get_current_user_id()
+        preferences_data = payload.preferences.model_dump()
+
+        cached = get_cached_itinerary(
+            user_id=user_id,
+            destination=payload.destination,
+            preferences=preferences_data,
+        )
+        if cached is None:
+            return error_response('Database not available', 500)
+
+        if cached:
+            return success_response(
+                {"itinerary": cached, "cache_hit": True},
+                'Loaded from cache',
+                200,
+            )
 
         result = run_async(
             gemini_service.generate_itinerary(
                 payload.destination,
-                payload.preferences.model_dump(),
+                preferences_data,
             )
         )
+
+        if isinstance(result, dict) and result.get('error'):
+            return error_response(result.get('error') or 'Failed to generate itinerary', 502)
 
         itinerary_record = save_itinerary(
             user_id=user_id,
             destination=payload.destination,
-            preferences=payload.preferences.model_dump(),
+            preferences=preferences_data,
             itinerary=result,
         )
         if itinerary_record is None:
             return error_response('Database not available', 500)
 
         return success_response(
-            {"itinerary": itinerary_record},
-            'Itinerary generated successfully',
+            {"itinerary": itinerary_record, "cache_hit": False},
+            'Generated new result',
             201,
         )
     except ValidationError as e:

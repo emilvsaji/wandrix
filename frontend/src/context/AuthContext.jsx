@@ -63,6 +63,19 @@ export function AuthProvider({ children }) {
     setWishlist([]);
   };
 
+  const updateProfile = async (profilePayload) => {
+    if (!user) return { success: false, error: 'Please login first' };
+
+    try {
+      const data = await api.updateProfile(profilePayload);
+      setUser(data.user);
+      setWishlist(data.user?.wishlist || []);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
   const addToWishlist = async (destination) => {
     if (!user) return { success: false, error: 'Please login first' };
 
@@ -101,6 +114,7 @@ export function AuthProvider({ children }) {
     addToWishlist,
     removeFromWishlist,
     isInWishlist,
+    updateProfile,
   };
 
   return (

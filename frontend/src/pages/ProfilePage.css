@@ -69,6 +69,13 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+.profile-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 .profile-avatar-pulse {
   position: absolute;
   top: 0;
@@ -152,6 +159,14 @@
   background: rgba(239, 68, 68, 0.1);
   color: var(--color-error, #ef4444);
   border-color: rgba(239, 68, 68, 0.3);
+}
+
+.profile-error-banner {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
 }
 
 /* --- Dashboard Grid --- */
@@ -389,6 +404,92 @@
 .skeleton-stat {
   height: 28px;
   width: 40px;
+}
+
+.profile-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: var(--space-lg);
+}
+
+.profile-modal {
+  width: min(560px, 100%);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.35);
+}
+
+.profile-modal h3 {
+  margin: 0 0 var(--space-lg);
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.profile-form-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.profile-form-input,
+.profile-form-file {
+  width: 100%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.profile-form-input:focus,
+.profile-form-file:focus {
+  border-color: var(--color-accent);
+}
+
+.profile-avatar-preview-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-xs);
+}
+
+.profile-avatar-preview {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-border-light);
+}
+
+.profile-form-error {
+  color: #fca5a5;
+  font-size: 0.85rem;
+}
+
+.profile-form-success {
+  color: #86efac;
+  font-size: 0.85rem;
+}
+
+.profile-form-actions {
+  margin-top: var(--space-sm);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
 }
 
 /* --- Responsive Breakpoints --- */

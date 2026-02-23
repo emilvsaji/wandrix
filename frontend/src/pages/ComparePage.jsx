@@ -58,8 +58,9 @@ function ComparePage({ initialDestination }) {
       setView('result');
     } catch (error) {
       console.error('Comparison error:', error);
-      setComparisonResult({ error: 'Failed to compare destinations' });
-      setApiError(error.message || 'Failed to compare destinations');
+      const compareError = error.message || 'Failed to compare destinations';
+      setComparisonResult({ error: compareError });
+      setApiError(compareError);
       setView('result');
     } finally {
       setIsLoading(false);
