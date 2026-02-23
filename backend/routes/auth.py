@@ -9,7 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from auth_utils import generate_token, get_current_user, get_current_user_id, jwt_required
 from config import Config
 from database import get_users_collection
-from models import AddWishlistRequest, RemoveWishlistRequest
+from models import AddWishlistRequest, RemoveWishlistRequest, ProfileUpdateRequest
 from utils.responses import success_response, error_response
 
 
@@ -68,6 +68,7 @@ def register():
                     "email": email,
                     "name": name,
                     "wishlist": [],
+                    "avatar_url": None,
                     "is_admin": user_doc['is_admin'],
                 },
             },
@@ -108,6 +109,7 @@ def login():
                     "email": user.get('email'),
                     "name": user.get('name'),
                     "wishlist": user.get('wishlist', []),
+                    "avatar_url": user.get('avatar_url'),
                     "is_admin": is_admin,
                     "created_at": user.get('created_at'),
                 },
@@ -132,6 +134,7 @@ def get_me():
                 "email": user.get('email'),
                 "name": user.get('name'),
                 "wishlist": user.get('wishlist', []),
+                "avatar_url": user.get('avatar_url'),
                 "is_admin": bool(user.get('is_admin', False)),
                 "created_at": user.get('created_at'),
             }
@@ -223,3 +226,53 @@ def check_in_wishlist(destination_name):
 
     in_wishlist = any(item.get('name') == destination_name for item in user.get('wishlist', []))
     return success_response({"in_wishlist": in_wishlist}, 'Wishlist check complete')
+
+
+@auth_bp.route('/profile', methods=['PUT'])
+@jwt_required
+def update_profile():
+    users = get_users_collection()
+    if users is None:
+        return error_response('Database not available', 500)
+
+    user_id = get_current_user_id()
+    query = _user_query_from_id(user_id)
+
+    try:
+        payload = ProfileUpdateRequest.model_validate(request.get_json() or {})
+    except ValidationError as e:
+        return error_response(f'Validation error: {e.errors()}', 400)
+
+    update_fields = {}
+    if payload.name is not None:
+        update_fields['name'] = payload.name
+    if payload.avatar_url is not None:
+        update_fields['avatar_url'] = payload.avatar_url
+
+    if not update_fields:
+        return error_response('No profile fields provided', 400)
+
+    update_fields['updated_at'] = datetime.utcnow()
+    result = users.update_one(query, {'$set': update_fields})
+
+    if result.matched_count == 0:
+        return error_response('User not found', 404)
+
+    updated_user = users.find_one(query)
+    if not updated_user:
+        return error_response('Failed to fetch updated profile', 500)
+
+    return success_response(
+        {
+            'user': {
+                'id': str(updated_user.get('_id')),
+                'email': updated_user.get('email'),
+                'name': updated_user.get('name'),
+                'wishlist': updated_user.get('wishlist', []),
+                'avatar_url': updated_user.get('avatar_url'),
+                'is_admin': bool(updated_user.get('is_admin', False)),
+                'created_at': updated_user.get('created_at'),
+            }
+        },
+        'Profile updated successfully',
+    )

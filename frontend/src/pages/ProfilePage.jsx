@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useUserComparisons } from '../hooks/useUserComparisons';
 import { useUserItineraries } from '../hooks/useUserItineraries';
 import './ProfilePage.css';
 
 function ProfilePage() {
-  const { user, wishlist } = useAuth();
+  const navigate = useNavigate();
+  const { user, wishlist, logout } = useAuth();
   const { comparisons, loading: comparisonsLoading } = useUserComparisons(Boolean(user));
   const { itineraries, loading: itinerariesLoading } = useUserItineraries(Boolean(user));
-  const [comparisonHistory, setComparisonHistory] = useState([]);
+  
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalTrips: 0,
@@ -21,11 +23,10 @@ function ProfilePage() {
     setLoading(isLoading);
 
     if (!isLoading) {
-      setComparisonHistory(comparisons.slice(0, 5));
       setStats({
-        totalTrips: itineraries.length,
-        wishlistCount: wishlist.length,
-        comparisonsCount: comparisons.length,
+        totalTrips: itineraries?.length || 0,
+        wishlistCount: wishlist?.length || 0,
+        comparisonsCount: comparisons?.length || 0,
       });
     }
   }, [comparisons, itineraries, wishlist, comparisonsLoading, itinerariesLoading]);
@@ -43,144 +44,120 @@ function ProfilePage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="profile-page">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Loading your profile...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
-    <div className="profile-page">
+    <div className="profile-dashboard">
       <div className="profile-container">
+        
         {/* Profile Header */}
-        <div className="profile-header">
-          <div className="profile-avatar">
-            <div className="avatar-circle">
-              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+        <header className="profile-header-card">
+          <div className="profile-header-content">
+            <div className="profile-avatar-wrapper">
+              <div className="profile-avatar-pulse"></div>
+              <div className="profile-avatar">
+                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+            </div>
+            <div className="profile-user-details">
+              <h1 className="profile-name">{user?.name || 'User'}</h1>
+              <p className="profile-email">{user?.email || 'user@example.com'}</p>
+              <span className="profile-badge">Member since {formatDate(user?.created_at)}</span>
             </div>
           </div>
-          <div className="profile-info">
-            <h1 className="profile-name">{user?.name || 'User'}</h1>
-            <p className="profile-email">{user?.email || 'user@example.com'}</p>
-            <p className="profile-join-date">
-              Member since {formatDate(user?.created_at)}
-            </p>
+          <div className="profile-header-actions">
+            <button className="btn-edit-profile">Edit Profile</button>
+            <button className="btn-logout" onClick={handleLogout}>Log Out</button>
           </div>
-        </div>
+        </header>
 
-        {/* Travel Statistics */}
-        <div className="profile-stats">
-          <div className="stat-card">
-            <div className="stat-number">{stats.totalTrips}</div>
-            <div className="stat-label">Trips Planned</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number">{stats.wishlistCount}</div>
-            <div className="stat-label">Saved Destinations</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number">{stats.comparisonsCount}</div>
-            <div className="stat-label">Comparisons Made</div>
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="profile-sections">
-          {/* Wishlist Preview */}
-          <div className="profile-section">
-            <h2 className="section-title">My Wishlist</h2>
-            {wishlist.length > 0 ? (
-              <div className="wishlist-preview">
-                {wishlist.slice(0, 4).map((destination, index) => (
-                  <div key={index} className="wishlist-item">
-                    <div className="destination-icon">📍</div>
-                    <div className="destination-info">
-                      <h4>{destination.name}</h4>
-                      <p>{destination.country}</p>
-                    </div>
-                  </div>
-                ))}
-                {wishlist.length > 4 && (
-                  <div className="more-items">
-                    +{wishlist.length - 4} more destinations
-                  </div>
-                )}
+        {/* Dashboard Grid */}
+        <div className="dashboard-grid">
+          
+          {/* Card 1: Account Info */}
+          <div className="dashboard-card account-info-card">
+            <div className="card-header">
+              <div className="card-icon">👤</div>
+              <h2>Account Info</h2>
+            </div>
+            <div className="card-body">
+              <div className="info-row">
+                <span className="info-label">Full Name</span>
+                <span className="info-value">{user?.name || 'N/A'}</span>
               </div>
-            ) : (
-              <div className="empty-state">
-                <div className="empty-icon">❤️</div>
-                <p>No destinations in your wishlist yet</p>
-                <p>Start exploring and save your favorite places!</p>
+              <div className="info-row">
+                <span className="info-label">Email Address</span>
+                <span className="info-value">{user?.email || 'N/A'}</span>
               </div>
-            )}
+              <div className="info-row">
+                <span className="info-label">Travel Style</span>
+                <span className="info-value badge-style">Explorer</span>
+              </div>
+            </div>
+            <div className="card-footer">
+              <button className="btn-text">Manage Account →</button>
+            </div>
           </div>
 
-          {/* Recent Comparisons */}
-          <div className="profile-section">
-            <h2 className="section-title">Recent Comparisons</h2>
-            {comparisonHistory.length > 0 ? (
-              <div className="comparison-history">
-                {comparisonHistory.map((comparison, index) => (
-                  <div key={index} className="comparison-item">
-                    <div className="comparison-destinations">
-                      <span className="destination-name">{comparison.destination1_analysis?.name || comparison.destination1}</span>
-                      <span className="vs">vs</span>
-                      <span className="destination-name">{comparison.destination2_analysis?.name || comparison.destination2}</span>
-                    </div>
-                    <div className="comparison-date">
-                      {formatDate(comparison.created_at)}
-                    </div>
-                  </div>
-                ))}
+          {/* Card 2: Travel Stats */}
+          <div className="dashboard-card travel-stats-card">
+            <div className="card-header">
+              <div className="card-icon">📊</div>
+              <h2>Travel Stats</h2>
+            </div>
+            <div className="card-body stats-grid">
+              <div className="stat-box">
+                {loading ? <div className="skeleton skeleton-stat"></div> : <span className="stat-value">{stats.totalTrips}</span>}
+                <span className="stat-name">Itineraries</span>
               </div>
-            ) : (
-              <div className="empty-state">
-                <div className="empty-icon">⚖️</div>
-                <p>No comparisons made yet</p>
-                <p>Compare destinations to find your perfect match!</p>
+              <div className="stat-box">
+                {loading ? <div className="skeleton skeleton-stat"></div> : <span className="stat-value">{stats.comparisonsCount}</span>}
+                <span className="stat-name">Comparisons</span>
               </div>
-            )}
-          </div>
-
-          {/* Travel Preferences */}
-          <div className="profile-section">
-            <h2 className="section-title">Travel Preferences</h2>
-            <div className="preferences-grid">
-              <div className="preference-item">
-                <div className="preference-icon">💰</div>
-                <div className="preference-info">
-                  <h4>Budget</h4>
-                  <p>Not specified</p>
-                </div>
-              </div>
-              <div className="preference-item">
-                <div className="preference-icon">📅</div>
-                <div className="preference-info">
-                  <h4>Trip Duration</h4>
-                  <p>Not specified</p>
-                </div>
-              </div>
-              <div className="preference-item">
-                <div className="preference-icon">🎯</div>
-                <div className="preference-info">
-                  <h4>Interests</h4>
-                  <p>Not specified</p>
-                </div>
-              </div>
-              <div className="preference-item">
-                <div className="preference-icon">👥</div>
-                <div className="preference-info">
-                  <h4>Travel Type</h4>
-                  <p>Not specified</p>
-                </div>
+              <div className="stat-box">
+                {loading ? <div className="skeleton skeleton-stat"></div> : <span className="stat-value">{stats.wishlistCount}</span>}
+                <span className="stat-name">Wishlist</span>
               </div>
             </div>
           </div>
+
+          {/* Card 3: Quick Actions */}
+          <div className="dashboard-card quick-actions-card">
+            <div className="card-header">
+              <div className="card-icon">⚡</div>
+              <h2>Quick Actions</h2>
+            </div>
+            <div className="card-body actions-list">
+              <button className="action-item" onClick={() => navigate('/wishlist')}>
+                <div className="action-icon">❤️</div>
+                <div className="action-text">
+                  <span className="action-title">View Wishlist</span>
+                  <span className="action-desc">Manage your saved destinations</span>
+                </div>
+                <div className="action-arrow">→</div>
+              </button>
+              <button className="action-item" onClick={() => navigate('/compare')}>
+                <div className="action-icon">⚖️</div>
+                <div className="action-text">
+                  <span className="action-title">Compare Destinations</span>
+                  <span className="action-desc">Find your perfect match</span>
+                </div>
+                <div className="action-arrow">→</div>
+              </button>
+              <button className="action-item" onClick={() => navigate('/explore')}>
+                <div className="action-icon">🗺️</div>
+                <div className="action-text">
+                  <span className="action-title">Generate Itinerary</span>
+                  <span className="action-desc">Plan your next adventure</span>
+                </div>
+                <div className="action-arrow">→</div>
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

@@ -1,19 +1,42 @@
-from google import genai
-from google.genai import types
-from google.genai.errors import ClientError
 import json
 import re
 import time
 from config import Config
 from typing import Dict, Any
 
+try:
+    from google import genai as new_genai
+except Exception:
+    new_genai = None
+
 class GeminiService:
     """Service for interacting with Google Gemini API"""
     
     def __init__(self):
-        self.client = genai.Client(api_key=Config.GEMINI_API_KEY)
-        # Use gemini-2.5-flash which is the latest model
+        self.client = None
+        self.legacy_model = None
+        self.provider = None
         self.model_name = "gemini-2.5-flash"
+
+        if not Config.GEMINI_API_KEY:
+            print("[GeminiService] GEMINI_API_KEY not set. AI endpoints will return an error.")
+            return
+
+        if new_genai is not None:
+            self.client = new_genai.Client(api_key=Config.GEMINI_API_KEY)
+            self.provider = "new"
+            return
+
+        try:
+            import google.generativeai as legacy_genai
+            legacy_genai.configure(api_key=Config.GEMINI_API_KEY)
+            self.legacy_model = legacy_genai.GenerativeModel("gemini-1.5-flash")
+            self.provider = "legacy"
+            return
+        except Exception:
+            pass
+
+        print("[GeminiService] No Gemini SDK installed. Install google-genai or google-generativeai.")
     
     def _clean_json_response(self, response_text: str) -> str:
         """Clean and extract JSON from response"""
@@ -34,29 +57,33 @@ class GeminiService:
     
     def _generate(self, prompt: str, retries: int = 3) -> str:
         """Generate content using Gemini API with retry logic"""
+        if self.provider is None:
+            raise RuntimeError(
+                "Gemini SDK not configured. Install google-genai or google-generativeai and set GEMINI_API_KEY."
+            )
+
         last_error = None
         for attempt in range(retries):
             try:
-                response = self.client.models.generate_content(
-                    model=self.model_name,
-                    contents=prompt
-                )
+                if self.provider == "new":
+                    response = self.client.models.generate_content(
+                        model=self.model_name,
+                        contents=prompt
+                    )
+                    return response.text
+
+                response = self.legacy_model.generate_content(prompt)
                 return response.text
-            except ClientError as e:
+            except Exception as e:
                 last_error = e
                 error_str = str(e)
                 print(f"Gemini API error (attempt {attempt + 1}/{retries}): {error_str}")
-                
-                # Check if it's a rate limit error
-                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
-                    wait_time = 30 * (attempt + 1)  # Exponential backoff
+                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
+                    wait_time = 30 * (attempt + 1)
                     print(f"Rate limited. Waiting {wait_time} seconds...")
                     time.sleep(wait_time)
                 else:
                     raise e
-            except Exception as e:
-                print(f"Unexpected error: {e}")
-                raise e
         
         raise last_error if last_error else Exception("Failed after retries")
     

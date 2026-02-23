@@ -113,6 +113,35 @@ class RemoveWishlistRequest(BaseModel):
     name: str
 
 
+class ProfileUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, value: Optional[str]):
+        if value is None:
+            return value
+        clean_value = value.strip()
+        if len(clean_value) < 2:
+            raise ValueError('Name must be at least 2 characters long')
+        if len(clean_value) > 80:
+            raise ValueError('Name must be at most 80 characters long')
+        return clean_value
+
+    @field_validator('avatar_url')
+    @classmethod
+    def validate_avatar_url(cls, value: Optional[str]):
+        if value is None:
+            return value
+        clean_value = value.strip()
+        if not clean_value:
+            return None
+        if len(clean_value) > 2_000_000:
+            raise ValueError('Avatar data is too large')
+        return clean_value
+
+
 class StandardSuccessResponse(BaseModel):
     success: bool = True
     data: Dict[str, Any] = Field(default_factory=dict)
