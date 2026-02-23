@@ -4,6 +4,7 @@ from config import Config
 from database import init_db
 from routes.api import api_bp
 from routes.auth import auth_bp
+from routes.admin import admin_bp
 import sys
 
 def create_app():
@@ -29,6 +30,7 @@ def create_app():
     # Register blueprints
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(admin_bp, url_prefix='/api/admin')
     
     @app.route('/')
     def index():

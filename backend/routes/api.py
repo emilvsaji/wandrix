@@ -1,13 +1,26 @@
-from flask import Blueprint, request, jsonify
 import asyncio
+
+from flask import Blueprint, request
+from pydantic import ValidationError
+
+from auth_utils import jwt_required, get_current_user_id
+from database import health_check as db_health_check, get_connection_status
+from models import ComparisonRequest, DestinationRequest, ItineraryGenerateRequest
 from services.gemini_service import gemini_service
-from database import get_comparisons_collection, get_itineraries_collection, health_check as db_health_check, get_connection_status
-from datetime import datetime
+from services.user_data_service import (
+    save_comparison,
+    save_itinerary,
+    get_user_comparison_history,
+    get_user_itinerary_history,
+    get_user_itinerary_by_id,
+)
+from utils.responses import success_response, error_response
+
 
 api_bp = Blueprint('api', __name__)
 
+
 def run_async(coro):
-    """Helper to run async functions in sync context"""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
@@ -15,169 +28,169 @@ def run_async(coro):
     finally:
         loop.close()
 
+
 @api_bp.route('/health', methods=['GET'])
 def health_check():
-    """Health check endpoint with database status"""
     db_status = db_health_check()
-    return jsonify({
-        "status": "healthy",
-        "message": "Wandrix API is running",
-        "database": db_status
-    })
+    return success_response(
+        {
+            "status": "healthy",
+            "database": db_status,
+        },
+        "Wandrix API is running",
+    )
+
 
 @api_bp.route('/db/status', methods=['GET'])
 def database_status():
-    """Detailed database connection status"""
-    return jsonify(get_connection_status())
+    return success_response(get_connection_status(), 'Database status fetched')
+
 
 @api_bp.route('/destination/info', methods=['POST'])
 def get_destination_info():
-    """Get detailed information about a destination"""
-    data = request.get_json()
-    
-    if not data or 'destination' not in data:
-        return jsonify({"error": "Destination name is required"}), 400
-    
-    destination = data['destination']
-    
     try:
-        result = run_async(gemini_service.get_destination_info(destination))
-        return jsonify(result)
+        payload = DestinationRequest.model_validate(request.get_json() or {})
+        result = run_async(gemini_service.get_destination_info(payload.destination))
+        return success_response(result, 'Destination information fetched')
+    except ValidationError as e:
+        return error_response(f'Validation error: {e.errors()}', 400)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return error_response(str(e), 500)
+
 
 @api_bp.route('/destination/highlights', methods=['POST'])
 def get_destination_highlights():
-    """Get special highlights of a destination"""
-    data = request.get_json()
-    
-    if not data or 'destination' not in data:
-        return jsonify({"error": "Destination name is required"}), 400
-    
-    destination = data['destination']
-    
     try:
-        result = run_async(gemini_service.get_destination_highlights(destination))
-        return jsonify(result)
+        payload = DestinationRequest.model_validate(request.get_json() or {})
+        result = run_async(gemini_service.get_destination_highlights(payload.destination))
+        return success_response(result, 'Destination highlights fetched')
+    except ValidationError as e:
+        return error_response(f'Validation error: {e.errors()}', 400)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return error_response(str(e), 500)
+
 
 @api_bp.route('/compare', methods=['POST'])
+@jwt_required
 def compare_destinations():
-    """Compare two destinations based on user preferences"""
-    data = request.get_json()
-    
-    required_fields = ['destination1', 'destination2', 'preferences']
-    for field in required_fields:
-        if field not in data:
-            return jsonify({"error": f"Missing required field: {field}"}), 400
-    
     try:
-        result = run_async(gemini_service.compare_destinations(
-            data['destination1'],
-            data['destination2'],
-            data['preferences']
-        ))
-        
-        # Save to database
-        comparison_record = {
-            "destination1": data['destination1'],
-            "destination2": data['destination2'],
-            "preferences": data['preferences'],
-            "result": result,
-            "created_at": datetime.utcnow()
-        }
-        
-        try:
-            comparisons = get_comparisons_collection()
-            if comparisons is not None:
-                comparisons.insert_one(comparison_record)
-        except Exception as db_error:
-            print(f"Database save error: {db_error}")
-        
-        return jsonify(result)
+        payload = ComparisonRequest.model_validate(request.get_json() or {})
+        user_id = get_current_user_id()
+
+        result = run_async(
+            gemini_service.compare_destinations(
+                payload.destination1,
+                payload.destination2,
+                payload.preferences.model_dump(),
+            )
+        )
+
+        comparison_record = save_comparison(
+            user_id=user_id,
+            destination1=payload.destination1,
+            destination2=payload.destination2,
+            preferences=payload.preferences.model_dump(),
+            result=result,
+        )
+        if comparison_record is None:
+            return error_response('Database not available', 500)
+
+        return success_response(
+            {"comparison": comparison_record},
+            'Comparison created successfully',
+            201,
+        )
+    except ValidationError as e:
+        return error_response(f'Validation error: {e.errors()}', 400)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return error_response(str(e), 500)
+
 
 @api_bp.route('/itinerary/generate', methods=['POST'])
+@jwt_required
 def generate_itinerary():
-    """Generate a personalized travel itinerary"""
-    data = request.get_json()
-    
-    if not data or 'destination' not in data:
-        return jsonify({"error": "Destination is required"}), 400
-    
-    preferences = data.get('preferences', {
-        'travel_duration': 7,
-        'budget': 'medium',
-        'interests': ['general tourism'],
-        'travel_type': 'solo'
-    })
-    
     try:
-        result = run_async(gemini_service.generate_itinerary(
-            data['destination'],
-            preferences
-        ))
-        
-        # Save to database
-        itinerary_record = {
-            "destination": data['destination'],
-            "preferences": preferences,
-            "itinerary": result,
-            "created_at": datetime.utcnow()
-        }
-        
-        try:
-            itineraries = get_itineraries_collection()
-            if itineraries is not None:
-                inserted = itineraries.insert_one(itinerary_record)
-                result['itinerary_id'] = str(inserted.inserted_id)
-        except Exception as db_error:
-            print(f"Database save error: {db_error}")
-        
-        return jsonify(result)
+        payload = ItineraryGenerateRequest.model_validate(request.get_json() or {})
+        user_id = get_current_user_id()
+
+        result = run_async(
+            gemini_service.generate_itinerary(
+                payload.destination,
+                payload.preferences.model_dump(),
+            )
+        )
+
+        itinerary_record = save_itinerary(
+            user_id=user_id,
+            destination=payload.destination,
+            preferences=payload.preferences.model_dump(),
+            itinerary=result,
+        )
+        if itinerary_record is None:
+            return error_response('Database not available', 500)
+
+        return success_response(
+            {"itinerary": itinerary_record},
+            'Itinerary generated successfully',
+            201,
+        )
+    except ValidationError as e:
+        return error_response(f'Validation error: {e.errors()}', 400)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return error_response(str(e), 500)
+
 
 @api_bp.route('/itinerary/<itinerary_id>', methods=['GET'])
+@jwt_required
 def get_itinerary(itinerary_id):
-    """Get a saved itinerary by ID"""
-    from bson import ObjectId
-    
+    user_id = get_current_user_id()
     try:
-        itineraries = get_itineraries_collection()
-        if itineraries is None:
-            return jsonify({"error": "Database not available"}), 500
-        
-        itinerary = itineraries.find_one({"_id": ObjectId(itinerary_id)})
-        
+        itinerary = get_user_itinerary_by_id(user_id, itinerary_id)
+        if itinerary is None:
+            return error_response('Database not available', 500)
+        if itinerary is False:
+            return error_response('Invalid itinerary id', 400)
         if not itinerary:
-            return jsonify({"error": "Itinerary not found"}), 404
-        
-        itinerary['_id'] = str(itinerary['_id'])
-        return jsonify(itinerary)
+            return error_response('Itinerary not found', 404)
+        return success_response({"itinerary": itinerary}, 'Itinerary fetched')
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return error_response(str(e), 500)
+
 
 @api_bp.route('/comparisons/history', methods=['GET'])
+@jwt_required
 def get_comparison_history():
-    """Get recent comparison history"""
-    try:
-        comparisons = get_comparisons_collection()
-        if comparisons is None:
-            return jsonify({"error": "Database not available"}), 500
-        
-        history = list(comparisons.find().sort("created_at", -1).limit(10))
-        
-        for item in history:
-            item['_id'] = str(item['_id'])
-        
-        return jsonify({"history": history})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    user_id = get_current_user_id()
 
-# Popular destinations data
+    try:
+        history = get_user_comparison_history(user_id)
+        if history is None:
+            return error_response('Database not available', 500)
+        return success_response(
+            {"comparisons": history},
+            'Comparison history fetched',
+        )
+    except Exception as e:
+        return error_response(str(e), 500)
+
+
+@api_bp.route('/itineraries/history', methods=['GET'])
+@jwt_required
+def get_itineraries_history():
+    user_id = get_current_user_id()
+
+    try:
+        history = get_user_itinerary_history(user_id)
+        if history is None:
+            return error_response('Database not available', 500)
+        return success_response(
+            {"itineraries": history},
+            'Itinerary history fetched',
+        )
+    except Exception as e:
+        return error_response(str(e), 500)
+
+
 POPULAR_DESTINATIONS = [
     {"name": "Paris", "country": "France", "image": "paris.jpg", "tagline": "City of Love"},
     {"name": "Tokyo", "country": "Japan", "image": "tokyo.jpg", "tagline": "Where Tradition Meets Future"},
@@ -190,10 +203,10 @@ POPULAR_DESTINATIONS = [
     {"name": "Barcelona", "country": "Spain", "image": "barcelona.jpg", "tagline": "City of Gaudi"},
     {"name": "Singapore", "country": "Singapore", "image": "singapore.jpg", "tagline": "Garden City"},
     {"name": "London", "country": "UK", "image": "london.jpg", "tagline": "The Great Wen"},
-    {"name": "Santorini", "country": "Greece", "image": "santorini.jpg", "tagline": "Jewel of the Aegean"}
+    {"name": "Santorini", "country": "Greece", "image": "santorini.jpg", "tagline": "Jewel of the Aegean"},
 ]
+
 
 @api_bp.route('/destinations/popular', methods=['GET'])
 def get_popular_destinations():
-    """Get list of popular destinations"""
-    return jsonify({"destinations": POPULAR_DESTINATIONS})
+    return success_response({"destinations": POPULAR_DESTINATIONS}, 'Popular destinations fetched')

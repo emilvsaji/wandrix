@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, Field
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field, field_validator
 
 class UserPreferences(BaseModel):
     """User travel preferences model"""
@@ -31,6 +31,14 @@ class ComparisonRequest(BaseModel):
     destination1: str
     destination2: str
     preferences: UserPreferences
+
+    @field_validator('destination1', 'destination2')
+    @classmethod
+    def validate_destination_name(cls, value: str):
+        clean_value = value.strip()
+        if len(clean_value) < 2:
+            raise ValueError('Destination name must be at least 2 characters long')
+        return clean_value
 
 class ComparisonResult(BaseModel):
     """Result model for destination comparison"""
@@ -63,3 +71,54 @@ class Itinerary(BaseModel):
     packing_suggestions: List[str]
     important_tips: List[str]
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ItineraryGenerateRequest(BaseModel):
+    destination: str
+    preferences: UserPreferences
+
+    @field_validator('destination')
+    @classmethod
+    def validate_destination(cls, value: str):
+        clean_value = value.strip()
+        if len(clean_value) < 2:
+            raise ValueError('Destination name must be at least 2 characters long')
+        return clean_value
+
+
+class DestinationRequest(BaseModel):
+    destination: str
+
+    @field_validator('destination')
+    @classmethod
+    def validate_destination(cls, value: str):
+        clean_value = value.strip()
+        if len(clean_value) < 2:
+            raise ValueError('Destination name must be at least 2 characters long')
+        return clean_value
+
+
+class WishlistDestination(BaseModel):
+    name: str
+    country: Optional[str] = None
+    tagline: Optional[str] = None
+    image: Optional[str] = None
+
+
+class AddWishlistRequest(BaseModel):
+    destination: WishlistDestination
+
+
+class RemoveWishlistRequest(BaseModel):
+    name: str
+
+
+class StandardSuccessResponse(BaseModel):
+    success: bool = True
+    data: Dict[str, Any] = Field(default_factory=dict)
+    message: str
+
+
+class StandardErrorResponse(BaseModel):
+    success: bool = False
+    message: str

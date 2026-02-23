@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import WishlistPage from './pages/WishlistPage';
 import ProfilePage from './pages/ProfilePage';
+import AdminPage from './pages/AdminPage';
 
 function AppContent() {
   const navigate = useNavigate();
@@ -51,6 +52,7 @@ function AppContent() {
           <Route path="/login" element={<LoginPage onNavigate={setCurrentPage} />} />
           <Route path="/register" element={<RegisterPage onNavigate={setCurrentPage} />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/admin" element={<AdminPage />} />
           <Route 
             path="/wishlist" 
             element={<WishlistPage onSelectDestination={handleSelectDestination} />} 

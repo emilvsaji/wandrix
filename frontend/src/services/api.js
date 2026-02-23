@@ -1,137 +1,147 @@
 const API_BASE_URL = 'http://localhost:5000/api';
 
-// Helper to get auth headers
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('wandrix_token');
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
-};
+class ApiError extends Error {
+  constructor(message, status = 500) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
+function getAuthToken() {
+  return localStorage.getItem('wandrix_token');
+}
+
+async function request(path, { method = 'GET', body, requiresAuth = false } = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  if (requiresAuth) {
+    const token = getAuthToken();
+    if (!token) {
+      throw new ApiError('Authentication required', 401);
+    }
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new ApiError('Invalid server response', response.status);
+  }
+
+  if (!response.ok || payload?.success === false) {
+    throw new ApiError(payload?.message || 'Request failed', response.status);
+  }
+
+  return payload?.data || {};
+}
 
 export const api = {
-  // Health check
-  async healthCheck() {
-    const response = await fetch(`${API_BASE_URL}/health`);
-    return response.json();
+  healthCheck() {
+    return request('/health');
   },
 
-  // ==================== AUTH ====================
-  
-  // Register new user
-  async register(name, email, password) {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+  register(name, email, password) {
+    return request('/auth/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
+      body: { name, email, password },
     });
-    return response.json();
   },
 
-  // Login user
-  async login(email, password) {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  login(email, password) {
+    return request('/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: { email, password },
     });
-    return response.json();
   },
 
-  // Get current user
-  async getMe() {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
-      headers: { ...getAuthHeaders() },
-    });
-    return response.json();
+  getMe() {
+    return request('/auth/me', { requiresAuth: true });
   },
 
-  // ==================== WISHLIST ====================
-
-  // Get wishlist
-  async getWishlist() {
-    const response = await fetch(`${API_BASE_URL}/auth/wishlist`, {
-      headers: { ...getAuthHeaders() },
-    });
-    return response.json();
+  getWishlist() {
+    return request('/auth/wishlist', { requiresAuth: true });
   },
 
-  // Add to wishlist
-  async addToWishlist(destination) {
-    const response = await fetch(`${API_BASE_URL}/auth/wishlist/add`, {
+  addToWishlist(destination) {
+    return request('/auth/wishlist/add', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-      body: JSON.stringify({ destination }),
+      requiresAuth: true,
+      body: { destination },
     });
-    return response.json();
   },
 
-  // Remove from wishlist
-  async removeFromWishlist(destinationName) {
-    const response = await fetch(`${API_BASE_URL}/auth/wishlist/remove`, {
+  removeFromWishlist(destinationName) {
+    return request('/auth/wishlist/remove', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-      body: JSON.stringify({ name: destinationName }),
+      requiresAuth: true,
+      body: { name: destinationName },
     });
-    return response.json();
   },
 
-  // ==================== DESTINATIONS ====================
-
-  // Get destination information
-  async getDestinationInfo(destination) {
-    const response = await fetch(`${API_BASE_URL}/destination/info`, {
+  getDestinationInfo(destination) {
+    return request('/destination/info', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ destination }),
+      body: { destination },
     });
-    return response.json();
   },
 
-  // Get destination highlights
-  async getDestinationHighlights(destination) {
-    const response = await fetch(`${API_BASE_URL}/destination/highlights`, {
+  getDestinationHighlights(destination) {
+    return request('/destination/highlights', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ destination }),
+      body: { destination },
     });
-    return response.json();
   },
 
-  // Compare two destinations
-  async compareDestinations(destination1, destination2, preferences) {
-    const response = await fetch(`${API_BASE_URL}/compare`, {
+  compareDestinations(destination1, destination2, preferences) {
+    return request('/compare', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ destination1, destination2, preferences }),
+      requiresAuth: true,
+      body: { destination1, destination2, preferences },
     });
-    return response.json();
   },
 
-  // Generate itinerary
-  async generateItinerary(destination, preferences) {
-    const response = await fetch(`${API_BASE_URL}/itinerary/generate`, {
+  generateItinerary(destination, preferences) {
+    return request('/itinerary/generate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ destination, preferences }),
+      requiresAuth: true,
+      body: { destination, preferences },
     });
-    return response.json();
   },
 
-  // Get saved itinerary
-  async getItinerary(itineraryId) {
-    const response = await fetch(`${API_BASE_URL}/itinerary/${itineraryId}`);
-    return response.json();
+  getItinerary(itineraryId) {
+    return request(`/itinerary/${itineraryId}`, { requiresAuth: true });
   },
 
-  // Get popular destinations
-  async getPopularDestinations() {
-    const response = await fetch(`${API_BASE_URL}/destinations/popular`);
-    return response.json();
+  getPopularDestinations() {
+    return request('/destinations/popular');
   },
 
-  // Get comparison history
-  async getComparisonHistory() {
-    const response = await fetch(`${API_BASE_URL}/comparisons/history`);
-    return response.json();
+  getComparisonHistory() {
+    return request('/comparisons/history', { requiresAuth: true });
+  },
+
+  getItineraryHistory() {
+    return request('/itineraries/history', { requiresAuth: true });
+  },
+
+  getAdminOverview() {
+    return request('/admin/overview', { requiresAuth: true });
+  },
+
+  getAdminUsers() {
+    return request('/admin/users', { requiresAuth: true });
   },
 };
 
+export { ApiError };
 export default api;

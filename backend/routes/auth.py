@@ -1,326 +1,225 @@
-from flask import Blueprint, request, jsonify
-from werkzeug.security import generate_password_hash, check_password_hash
-from database import get_users_collection, get_db
-from config import Config
-from datetime import datetime, timedelta
+from datetime import datetime
+
 from bson import ObjectId
 from bson.errors import InvalidId
-import jwt
-import os
-import traceback
+from flask import Blueprint, request
+from pydantic import ValidationError
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from auth_utils import generate_token, get_current_user, get_current_user_id, jwt_required
+from config import Config
+from database import get_users_collection
+from models import AddWishlistRequest, RemoveWishlistRequest
+from utils.responses import success_response, error_response
+
 
 auth_bp = Blueprint('auth', __name__)
 
-# Secret key for JWT - use from config
-JWT_SECRET = Config.JWT_SECRET
-JWT_EXPIRATION_HOURS = Config.JWT_EXPIRATION_HOURS
 
-def generate_token(user_id):
-    """Generate JWT token for user"""
-    payload = {
-        'user_id': str(user_id),
-        'exp': datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS),
-        'iat': datetime.utcnow()
-    }
-    return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
-
-def verify_token(token):
-    """Verify JWT token and return user_id"""
+def _user_query_from_id(user_id: str):
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
-        return payload['user_id']
-    except jwt.ExpiredSignatureError:
-        print("[AUTH] Token expired")
-        return None
-    except jwt.InvalidTokenError as e:
-        print(f"[AUTH] Invalid token: {e}")
-        return None
+        return {"_id": ObjectId(user_id)}
+    except (InvalidId, TypeError, ValueError):
+        return {"_id": user_id}
 
-def get_current_user():
-    """Get current user from Authorization header"""
-    auth_header = request.headers.get('Authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        return None
-    
-    token = auth_header.split(' ')[1]
-    user_id = verify_token(token)
-    
-    if not user_id:
-        return None
-    
-    users = get_users_collection()
-    if users is None:
-        print("[AUTH] Users collection not available")
-        return None
-    
-    try:
-        # Try with ObjectId for MongoDB
-        try:
-            user = users.find_one({"_id": ObjectId(user_id)})
-        except (InvalidId, Exception):
-            # Fall back to string for file-based storage
-            user = users.find_one({"_id": user_id})
-        
-        if user:
-            user['_id'] = str(user['_id'])
-        return user
-    except Exception as e:
-        print(f"[AUTH] Error getting user: {e}")
-        return None
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
-    """Register a new user"""
     try:
-        data = request.get_json()
-        
-        if not data:
-            return jsonify({"error": "No data provided"}), 400
-        
-        required_fields = ['email', 'password', 'name']
-        for field in required_fields:
-            if field not in data or not data[field]:
-                return jsonify({"error": f"Missing required field: {field}"}), 400
-        
-        email = data['email'].lower().strip()
-        password = data['password']
-        name = data['name'].strip()
-        
-        # Validate email format
+        data = request.get_json() or {}
+        name = (data.get('name') or '').strip()
+        email = (data.get('email') or '').lower().strip()
+        password = data.get('password') or ''
+
+        if not name or not email or not password:
+            return error_response('Name, email and password are required', 400)
+
         if '@' not in email or '.' not in email:
-            return jsonify({"error": "Invalid email format"}), 400
-        
-        # Validate password length
+            return error_response('Invalid email format', 400)
+
         if len(password) < 6:
-            return jsonify({"error": "Password must be at least 6 characters"}), 400
-        
+            return error_response('Password must be at least 6 characters', 400)
+
         users = get_users_collection()
         if users is None:
-            print("[AUTH] Database not available for registration")
-            return jsonify({"error": "Database not available. Please try again later."}), 500
-        
-        # Check if user already exists
-        existing_user = users.find_one({"email": email})
-        if existing_user:
-            return jsonify({"error": "Email already registered"}), 409
-        
-        # Create new user document
+            return error_response('Database not available', 500)
+
+        if users.find_one({"email": email}):
+            return error_response('Email already registered', 409)
+
         user_doc = {
             "email": email,
             "password": generate_password_hash(password),
             "name": name,
             "wishlist": [],
-            "created_at": datetime.utcnow()
+            "is_admin": email in Config.ADMIN_EMAILS,
+            "created_at": datetime.utcnow(),
         }
-        
+
         result = users.insert_one(user_doc)
-        user_id = result.inserted_id
-        token = generate_token(user_id)
-        
-        print(f"[AUTH] User registered successfully: {email}")
-        
-        return jsonify({
-            "message": "Registration successful",
-            "token": token,
-            "user": {
-                "id": str(user_id),
-                "email": email,
-                "name": name
-            }
-        }), 201
-        
-    except Exception as e:
-        print(f"[AUTH] Registration error: {e}")
-        traceback.print_exc()
-        return jsonify({"error": "Registration failed. Please try again."}), 500
+        user_id = str(result.inserted_id)
+        token = generate_token(user_id, is_admin=user_doc['is_admin'])
+
+        return success_response(
+            {
+                "token": token,
+                "user": {
+                    "id": user_id,
+                    "email": email,
+                    "name": name,
+                    "wishlist": [],
+                    "is_admin": user_doc['is_admin'],
+                },
+            },
+            "Registration successful",
+            201,
+        )
+    except Exception:
+        return error_response('Registration failed. Please try again.', 500)
+
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    """Login user"""
     try:
-        data = request.get_json()
-        
-        if not data or 'email' not in data or 'password' not in data:
-            return jsonify({"error": "Email and password are required"}), 400
-        
-        email = data['email'].lower().strip()
-        password = data['password']
-        
+        data = request.get_json() or {}
+        email = (data.get('email') or '').lower().strip()
+        password = data.get('password') or ''
+
+        if not email or not password:
+            return error_response('Email and password are required', 400)
+
         users = get_users_collection()
         if users is None:
-            print("[AUTH] Database not available for login")
-            return jsonify({"error": "Database not available. Please try again later."}), 500
-        
+            return error_response('Database not available', 500)
+
         user = users.find_one({"email": email})
-        
-        if not user:
-            print(f"[AUTH] Login failed - user not found: {email}")
-            return jsonify({"error": "Invalid email or password"}), 401
-        
-        if not check_password_hash(user['password'], password):
-            print(f"[AUTH] Login failed - invalid password for: {email}")
-            return jsonify({"error": "Invalid email or password"}), 401
-        
-        token = generate_token(user['_id'])
-        
-        print(f"[AUTH] User logged in successfully: {email}")
-        
-        return jsonify({
-            "message": "Login successful",
-            "token": token,
-            "user": {
-                "id": str(user['_id']),
-                "email": user['email'],
-                "name": user['name']
-            }
-        })
-        
-    except Exception as e:
-        print(f"[AUTH] Login error: {e}")
-        traceback.print_exc()
-        return jsonify({"error": "Login failed. Please try again."}), 500
-    
-    return jsonify({
-        "message": "Login successful",
-        "token": token,
-        "user": {
-            "id": str(user['_id']),
-            "email": user['email'],
-            "name": user['name']
-        }
-    })
+        if not user or not check_password_hash(user.get('password', ''), password):
+            return error_response('Invalid email or password', 401)
+
+        user_id = str(user['_id'])
+        is_admin = bool(user.get('is_admin', False))
+        token = generate_token(user_id, is_admin=is_admin)
+
+        return success_response(
+            {
+                "token": token,
+                "user": {
+                    "id": user_id,
+                    "email": user.get('email'),
+                    "name": user.get('name'),
+                    "wishlist": user.get('wishlist', []),
+                    "is_admin": is_admin,
+                    "created_at": user.get('created_at'),
+                },
+            },
+            'Login successful',
+        )
+    except Exception:
+        return error_response('Login failed. Please try again.', 500)
+
 
 @auth_bp.route('/me', methods=['GET'])
+@jwt_required
 def get_me():
-    """Get current user info"""
     user = get_current_user()
-    
     if not user:
-        return jsonify({"error": "Unauthorized"}), 401
-    
-    return jsonify({
-        "user": {
-            "id": user['_id'],
-            "email": user['email'],
-            "name": user['name'],
-            "wishlist": user.get('wishlist', [])
-        }
-    })
+        return error_response('Unauthorized', 401)
+
+    return success_response(
+        {
+            "user": {
+                "id": user['_id'],
+                "email": user.get('email'),
+                "name": user.get('name'),
+                "wishlist": user.get('wishlist', []),
+                "is_admin": bool(user.get('is_admin', False)),
+                "created_at": user.get('created_at'),
+            }
+        },
+        'User profile fetched',
+    )
+
 
 @auth_bp.route('/wishlist', methods=['GET'])
+@jwt_required
 def get_wishlist():
-    """Get user's wishlist"""
     user = get_current_user()
-    
     if not user:
-        return jsonify({"error": "Unauthorized"}), 401
-    
-    return jsonify({
-        "wishlist": user.get('wishlist', [])
-    })
+        return error_response('Unauthorized', 401)
+
+    return success_response({"wishlist": user.get('wishlist', [])}, 'Wishlist fetched')
+
 
 @auth_bp.route('/wishlist/add', methods=['POST'])
+@jwt_required
 def add_to_wishlist():
-    """Add a destination to wishlist"""
-    user = get_current_user()
-    
-    if not user:
-        return jsonify({"error": "Unauthorized"}), 401
-    
-    data = request.get_json()
-    
-    if not data or 'destination' not in data:
-        return jsonify({"error": "Destination is required"}), 400
-    
-    destination = data['destination']
-    
-    # Ensure destination has required fields
-    if not isinstance(destination, dict) or 'name' not in destination:
-        return jsonify({"error": "Invalid destination format"}), 400
-    
     users = get_users_collection()
     if users is None:
-        return jsonify({"error": "Database not available"}), 500
-    
-    # Check if already in wishlist
-    current_wishlist = user.get('wishlist', [])
-    for item in current_wishlist:
-        if item.get('name') == destination['name']:
-            return jsonify({"error": "Destination already in wishlist"}), 409
-    
-    # Add timestamp
-    destination['added_at'] = datetime.utcnow().isoformat()
-    
+        return error_response('Database not available', 500)
+
+    user = get_current_user()
+    if not user:
+        return error_response('Unauthorized', 401)
+
     try:
-        # Try with ObjectId for MongoDB, fall back to string for file-based
-        try:
-            users.update_one(
-                {"_id": ObjectId(user['_id'])},
-                {"$push": {"wishlist": destination}}
-            )
-        except:
-            users.update_one(
-                {"_id": user['_id']},
-                {"$push": {"wishlist": destination}}
-            )
-        
-        return jsonify({
-            "message": "Added to wishlist",
-            "destination": destination
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        payload = AddWishlistRequest.model_validate(request.get_json() or {})
+    except ValidationError as e:
+        return error_response(f'Validation error: {e.errors()}', 400)
+
+    destination = payload.destination.model_dump()
+    destination['added_at'] = datetime.utcnow().isoformat()
+
+    if any(item.get('name') == destination['name'] for item in user.get('wishlist', [])):
+        return error_response('Destination already in wishlist', 409)
+
+    user_id = get_current_user_id()
+    query = _user_query_from_id(user_id)
+
+    result = users.update_one(query, {"$push": {"wishlist": destination}})
+    if result.modified_count == 0:
+        return error_response('Failed to update wishlist', 500)
+
+    refreshed_user = users.find_one(query)
+    wishlist = refreshed_user.get('wishlist', []) if refreshed_user else []
+    return success_response(
+        {"wishlist": wishlist, "destination": destination},
+        'Added to wishlist',
+    )
+
 
 @auth_bp.route('/wishlist/remove', methods=['POST'])
+@jwt_required
 def remove_from_wishlist():
-    """Remove a destination from wishlist"""
-    user = get_current_user()
-    
-    if not user:
-        return jsonify({"error": "Unauthorized"}), 401
-    
-    data = request.get_json()
-    
-    if not data or 'name' not in data:
-        return jsonify({"error": "Destination name is required"}), 400
-    
-    destination_name = data['name']
-    
     users = get_users_collection()
     if users is None:
-        return jsonify({"error": "Database not available"}), 500
-    
+        return error_response('Database not available', 500)
+
     try:
-        # Try with ObjectId for MongoDB, fall back to string for file-based
-        try:
-            users.update_one(
-                {"_id": ObjectId(user['_id'])},
-                {"$pull": {"wishlist": {"name": destination_name}}}
-            )
-        except:
-            users.update_one(
-                {"_id": user['_id']},
-                {"$pull": {"wishlist": {"name": destination_name}}}
-            )
-        
-        return jsonify({
-            "message": "Removed from wishlist",
-            "destination": destination_name
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        payload = RemoveWishlistRequest.model_validate(request.get_json() or {})
+    except ValidationError as e:
+        return error_response(f'Validation error: {e.errors()}', 400)
+
+    user_id = get_current_user_id()
+    query = _user_query_from_id(user_id)
+
+    result = users.update_one(query, {"$pull": {"wishlist": {"name": payload.name}}})
+    if result.matched_count == 0:
+        return error_response('User not found', 404)
+
+    refreshed_user = users.find_one(query)
+    wishlist = refreshed_user.get('wishlist', []) if refreshed_user else []
+    return success_response(
+        {"wishlist": wishlist, "removed_name": payload.name},
+        'Removed from wishlist',
+    )
+
 
 @auth_bp.route('/wishlist/check/<destination_name>', methods=['GET'])
+@jwt_required
 def check_in_wishlist(destination_name):
-    """Check if a destination is in user's wishlist"""
     user = get_current_user()
-    
     if not user:
-        return jsonify({"in_wishlist": False})
-    
-    current_wishlist = user.get('wishlist', [])
-    for item in current_wishlist:
-        if item.get('name') == destination_name:
-            return jsonify({"in_wishlist": True})
-    
-    return jsonify({"in_wishlist": False})
+        return error_response('Unauthorized', 401)
+
+    in_wishlist = any(item.get('name') == destination_name for item in user.get('wishlist', []))
+    return success_response({"in_wishlist": in_wishlist}, 'Wishlist check complete')

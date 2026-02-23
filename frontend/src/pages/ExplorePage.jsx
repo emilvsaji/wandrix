@@ -79,15 +79,10 @@ function ExplorePage({ onSelectDestination }) {
 
     try {
       const result = await api.getDestinationHighlights(destination.name);
-      console.log('API Response:', result); // Debug log
-      if (result && !result.error) {
-        setHighlights(result);
-      } else {
-        setHighlights({ error: result?.error || 'Failed to load highlights' });
-      }
+      setHighlights(result);
     } catch (error) {
       console.error('Error fetching highlights:', error);
-      setHighlights({ error: 'Failed to load highlights' });
+      setHighlights({ error: error.message || 'Failed to load highlights' });
     } finally {
       setIsLoading(false);
     }

@@ -20,42 +20,41 @@ export function AuthProvider({ children }) {
 
   const fetchUser = async () => {
     try {
-      const response = await api.getMe();
-      if (response.user) {
-        setUser(response.user);
-        setWishlist(response.user.wishlist || []);
-      } else {
-        // Token invalid, clear it
-        localStorage.removeItem('wandrix_token');
-      }
+      const data = await api.getMe();
+      setUser(data.user);
+      setWishlist(data.user?.wishlist || []);
     } catch (error) {
       console.error('Error fetching user:', error);
       localStorage.removeItem('wandrix_token');
+      setUser(null);
+      setWishlist([]);
     } finally {
       setLoading(false);
     }
   };
 
   const login = async (email, password) => {
-    const response = await api.login(email, password);
-    if (response.token) {
-      localStorage.setItem('wandrix_token', response.token);
-      setUser(response.user);
-      setWishlist(response.user.wishlist || []);
+    try {
+      const data = await api.login(email, password);
+      localStorage.setItem('wandrix_token', data.token);
+      setUser(data.user);
+      setWishlist(data.user?.wishlist || []);
       return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
     }
-    return { success: false, error: response.error };
   };
 
   const register = async (name, email, password) => {
-    const response = await api.register(name, email, password);
-    if (response.token) {
-      localStorage.setItem('wandrix_token', response.token);
-      setUser(response.user);
-      setWishlist([]);
+    try {
+      const data = await api.register(name, email, password);
+      localStorage.setItem('wandrix_token', data.token);
+      setUser(data.user);
+      setWishlist(data.user?.wishlist || []);
       return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
     }
-    return { success: false, error: response.error };
   };
 
   const logout = () => {
@@ -66,24 +65,26 @@ export function AuthProvider({ children }) {
 
   const addToWishlist = async (destination) => {
     if (!user) return { success: false, error: 'Please login first' };
-    
-    const response = await api.addToWishlist(destination);
-    if (response.message) {
-      setWishlist(prev => [...prev, { ...destination, added_at: new Date().toISOString() }]);
+
+    try {
+      const data = await api.addToWishlist(destination);
+      setWishlist(data.wishlist || []);
       return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
     }
-    return { success: false, error: response.error };
   };
 
   const removeFromWishlist = async (destinationName) => {
     if (!user) return { success: false, error: 'Please login first' };
-    
-    const response = await api.removeFromWishlist(destinationName);
-    if (response.message) {
-      setWishlist(prev => prev.filter(item => item.name !== destinationName));
+
+    try {
+      const data = await api.removeFromWishlist(destinationName);
+      setWishlist(data.wishlist || []);
       return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
     }
-    return { success: false, error: response.error };
   };
 
   const isInWishlist = (destinationName) => {

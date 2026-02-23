@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import { useUserComparisons } from '../hooks/useUserComparisons';
+import { useUserItineraries } from '../hooks/useUserItineraries';
 import './ProfilePage.css';
 
 function ProfilePage() {
   const { user, wishlist } = useAuth();
-  const [recentTrips, setRecentTrips] = useState([]);
+  const { comparisons, loading: comparisonsLoading } = useUserComparisons(Boolean(user));
+  const { itineraries, loading: itinerariesLoading } = useUserItineraries(Boolean(user));
   const [comparisonHistory, setComparisonHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -15,32 +17,18 @@ function ProfilePage() {
   });
 
   useEffect(() => {
-    loadProfileData();
-  }, []);
+    const isLoading = comparisonsLoading || itinerariesLoading;
+    setLoading(isLoading);
 
-  const loadProfileData = async () => {
-    try {
-      setLoading(true);
-
-      // Load comparison history
-      const comparisonResponse = await api.getComparisonHistory();
-      if (comparisonResponse.history) {
-        setComparisonHistory(comparisonResponse.history.slice(0, 5)); // Last 5 comparisons
-      }
-
-      // Calculate stats
+    if (!isLoading) {
+      setComparisonHistory(comparisons.slice(0, 5));
       setStats({
-        totalTrips: recentTrips.length,
+        totalTrips: itineraries.length,
         wishlistCount: wishlist.length,
-        comparisonsCount: comparisonResponse.history?.length || 0
+        comparisonsCount: comparisons.length,
       });
-
-    } catch (error) {
-      console.error('Error loading profile data:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [comparisons, itineraries, wishlist, comparisonsLoading, itinerariesLoading]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';

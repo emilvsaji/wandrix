@@ -5,8 +5,12 @@ import PreferencesForm from '../components/PreferencesForm';
 import ComparisonResult from '../components/ComparisonResult';
 import ItineraryView from '../components/ItineraryView';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useUserComparisons } from '../hooks/useUserComparisons';
+import { useUserItineraries } from '../hooks/useUserItineraries';
 
 function ComparePage({ initialDestination }) {
+  const { user } = useAuth();
   const [destination1, setDestination1] = useState(initialDestination || '');
   const [destination2, setDestination2] = useState('');
   const [preferences, setPreferences] = useState({
@@ -21,6 +25,10 @@ function ComparePage({ initialDestination }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingItinerary, setIsGeneratingItinerary] = useState(false);
   const [view, setView] = useState('form'); // 'form', 'result', 'itinerary'
+  const [apiError, setApiError] = useState('');
+
+  const { refetch: refetchComparisons } = useUserComparisons(Boolean(user));
+  const { refetch: refetchItineraries } = useUserItineraries(Boolean(user));
 
   const handleCompare = async () => {
     if (!destination1 || !destination2) {
@@ -35,14 +43,23 @@ function ComparePage({ initialDestination }) {
 
     setIsLoading(true);
     setComparisonResult(null);
+    setApiError('');
+
+    if (!user) {
+      setApiError('Please sign in to compare destinations.');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const result = await api.compareDestinations(destination1, destination2, preferences);
-      setComparisonResult(result);
+      setComparisonResult(result.comparison?.result || null);
+      await refetchComparisons();
       setView('result');
     } catch (error) {
       console.error('Comparison error:', error);
       setComparisonResult({ error: 'Failed to compare destinations' });
+      setApiError(error.message || 'Failed to compare destinations');
       setView('result');
     } finally {
       setIsLoading(false);
@@ -51,14 +68,17 @@ function ComparePage({ initialDestination }) {
 
   const handleGenerateItinerary = async (destination) => {
     setIsGeneratingItinerary(true);
+    setApiError('');
 
     try {
       const result = await api.generateItinerary(destination, preferences);
-      setItinerary(result);
+      setItinerary(result.itinerary?.itinerary || null);
+      await refetchItineraries();
       setView('itinerary');
     } catch (error) {
       console.error('Itinerary error:', error);
       setItinerary({ error: 'Failed to generate itinerary' });
+      setApiError(error.message || 'Failed to generate itinerary');
       setView('itinerary');
     } finally {
       setIsGeneratingItinerary(false);
@@ -120,6 +140,12 @@ function ComparePage({ initialDestination }) {
           <button className="back-to-form" onClick={handleBackToCompare}>
             ← New Comparison
           </button>
+
+          {apiError && (
+            <div className="comparison-error">
+              <p>{apiError}</p>
+            </div>
+          )}
 
           <ComparisonResult
             result={comparisonResult}

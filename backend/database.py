@@ -410,10 +410,12 @@ def _create_indexes():
         
         # Comparisons collection indexes
         _db.comparisons.create_index("created_at")
+        _db.comparisons.create_index([("user_id", 1), ("created_at", -1)])
         log.debug("Created index on comparisons.created_at")
         
         # Itineraries collection indexes
         _db.itineraries.create_index([("destination", 1), ("created_at", -1)])
+        _db.itineraries.create_index([("user_id", 1), ("created_at", -1)])
         log.debug("Created compound index on itineraries")
         
         log.success("Database indexes created successfully")

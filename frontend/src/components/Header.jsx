@@ -12,6 +12,7 @@ function Header({ currentPage, setCurrentPage }) {
     { id: 'itinerary', label: 'Journey Schedule' },
     { id: 'explore', label: 'Explore' },
     { id: 'wishlist', label: 'Wishlist' },
+    ...(user?.is_admin ? [{ id: 'admin', label: 'Admin' }] : []),
   ];
 
   const handleLogout = () => {
