@@ -1,22 +1,10 @@
 import './HomePage.css';
-import React, { Suspense } from 'react';
-
-const Silk = React.lazy(() => import('../components/Silk'));
+import React from 'react';
 
 function HomePage({ onGetStarted }) {
   return (
     <section className="hero">
-      <div className="hero-background" aria-hidden="true">
-        <Suspense fallback={null}>
-          <Silk
-            speed={5}
-            scale={1}
-            color="#7B7481"
-            noiseIntensity={1.5}
-            rotation={0}
-          />
-        </Suspense>
-      </div>
+      <div className="hero-background" aria-hidden="true" />
 
       <div className="hero-content">
         <p className="hero-eyebrow">AI-Powered Travel Planning</p>

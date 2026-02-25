@@ -1,4 +1,25 @@
+.compare-page-shell {
+  position: relative;
+  overflow: hidden;
+}
+
+.compare-page-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.compare-page-background::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 10, 11, 0.68);
+}
+
 .compare-page {
+  position: relative;
+  z-index: 1;
   max-width: 1000px;
   margin: 0 auto;
   padding: var(--space-2xl) var(--space-xl);

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 import { AuthProvider } from './context/AuthContext';
@@ -10,6 +11,8 @@ import RegisterPage from './pages/RegisterPage';
 import WishlistPage from './pages/WishlistPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
+
+const LightPillar = lazy(() => import('./components/LightPillar'));
 
 function AppContent() {
   const navigate = useNavigate();
@@ -33,9 +36,31 @@ function AppContent() {
     return path;
   };
 
+  const showPillarBackground = getCurrentPage() === 'home';
+
   return (
     <div className="app">
       <Header currentPage={getCurrentPage()} setCurrentPage={setCurrentPage} />
+      {showPillarBackground && (
+        <div className="app-lightpillar" aria-hidden="true">
+          <Suspense fallback={null}>
+            <LightPillar
+              topColor="#5227FF"
+              bottomColor="#FF9FFC"
+              intensity={1}
+              rotationSpeed={0.3}
+              glowAmount={0.002}
+              pillarWidth={3}
+              pillarHeight={0.4}
+              noiseIntensity={0.5}
+              pillarRotation={25}
+              interactive={false}
+              mixBlendMode="screen"
+              quality="high"
+            />
+          </Suspense>
+        </div>
+      )}
       <main className="main-content">
         <Routes>
           <Route path="/" element={<HomePage onGetStarted={handleGetStarted} />} />

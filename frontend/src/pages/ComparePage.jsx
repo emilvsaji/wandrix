@@ -4,6 +4,7 @@ import DestinationInput from '../components/DestinationInput';
 import PreferencesForm from '../components/PreferencesForm';
 import ComparisonResult from '../components/ComparisonResult';
 import ItineraryView from '../components/ItineraryView';
+import LightRays from '../components/LightRays';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useUserComparisons } from '../hooks/useUserComparisons';
@@ -97,7 +98,24 @@ function ComparePage({ initialDestination }) {
   }
 
   return (
-    <div className="compare-page">
+    <div className="compare-page-shell">
+      <div className="compare-page-background" aria-hidden="true">
+        <LightRays
+          raysOrigin="top-center"
+          raysColor="#ffffff"
+          raysSpeed={1}
+          lightSpread={0.5}
+          rayLength={3}
+          followMouse={true}
+          mouseInfluence={0.1}
+          noiseAmount={0}
+          distortion={0}
+          pulsating={false}
+          fadeDistance={1}
+          saturation={1}
+        />
+      </div>
+      <div className="compare-page">
       {view === 'form' && (
         <>
           <div className="compare-header">
@@ -164,6 +182,7 @@ function ComparePage({ initialDestination }) {
           )}
         </>
       )}
+      </div>
     </div>
   );
 }
