@@ -1,8 +1,9 @@
 /**
- * Utility for fetching destination images
- * Uses Lorem Picsum for reliable, high-quality images
- * Each destination gets a consistent image based on its name hash
+ * Utility for destination images.
+ * Uses backend proxy endpoint that resolves destination images via Unsplash.
  */
+
+const API_BASE_URL = 'http://localhost:5000/api';
 
 // Generate a consistent numeric seed from destination name
 function getDestinationSeed(destination) {
@@ -24,9 +25,8 @@ function getDestinationSeed(destination) {
  * @returns {string} Picsum image URL
  */
 export function getDestinationImage(destination, width = 800, height = 600) {
-  const seed = getDestinationSeed(destination);
-  // Using Lorem Picsum with seed for consistent images per destination
-  return `https://picsum.photos/seed/${seed}/${width}/${height}`;
+  const safeDestination = encodeURIComponent(destination || 'destination');
+  return `${API_BASE_URL}/images/destination?destination=${safeDestination}&w=${width}&h=${height}`;
 }
 
 /**

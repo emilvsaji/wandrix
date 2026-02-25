@@ -171,13 +171,20 @@ class GeminiService:
     async def get_destination_info(self, destination: str) -> Dict[str, Any]:
         prompt = self._build_json_prompt(
             instruction=(
-                f"Provide detailed tourist information for {destination}."
+                f"Provide detailed tourist information for {destination}. Keep responses concise and factual."
             ),
             schema=(
-                '{"name":"","country":"","description":"","climate":"",'
-                '"best_seasons":[],"estimated_daily_cost":{"budget":"","mid_range":"","luxury":""},'
-                '"top_attractions":[],"local_cuisine":[],"cultural_significance":"",'
-                '"unique_experiences":[],"accessibility":"","safety_rating":"","tourist_friendliness":""}'
+                '{"name":"","description":"","category":"","state":"","country":"",'
+                '"coordinates":{"lat":0,"lng":0},'
+                '"top_attractions":[{"name":"","description":"","entry_fee":"","timings":"","distance_from_main_place":""}],'
+                '"unique_experiences":[],"best_time_to_visit":{"seasonal_breakdown":[],"weather_info":""},'
+                '"how_to_reach":{"nearest_airport":"","airport_distance":"","nearest_railway_station":"","road_connectivity":""},'
+                '"accommodation_options":{"luxury":"","mid_range":"","budget":"","average_price_range":""},'
+                '"local_cuisine":[],"travel_tips":[],'
+                'nearby_places":[{"name":"","distance":"","travel_time":""}],'
+                '"suggested_itinerary":{"one_day":[],"two_day":[]},'
+                '"climate":"","best_seasons":[],"estimated_daily_cost":{"budget":"","mid_range":"","luxury":""},'
+                '"cultural_significance":"","accessibility":"","safety_rating":"","tourist_friendliness":""}'
             ),
         )
 

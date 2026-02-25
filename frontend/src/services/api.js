@@ -149,6 +149,27 @@ export const api = {
   getAdminUsers() {
     return request('/admin/users', { requiresAuth: true });
   },
+
+  updateAdminUserRole(userId, is_admin) {
+    return request(`/admin/users/${userId}/role`, {
+      method: 'PATCH',
+      requiresAuth: true,
+      body: { is_admin },
+    });
+  },
+
+  deleteAdminUser(userId) {
+    return request(`/admin/users/${userId}`, {
+      method: 'DELETE',
+      requiresAuth: true,
+    });
+  },
+
+  getAdminUserActivity(userId) {
+    return request(`/admin/users/${userId}/activity`, {
+      requiresAuth: true,
+    });
+  },
 };
 
 export { ApiError };

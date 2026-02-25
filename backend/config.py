@@ -11,6 +11,9 @@ class Config:
     
     # Gemini API
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
+
+    # Unsplash API
+    UNSPLASH_ACCESS_KEY = os.getenv('UNSPLASH_ACCESS_KEY', '')
     
     # Flask
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')

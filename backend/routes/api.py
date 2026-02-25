@@ -1,9 +1,14 @@
 import asyncio
+import hashlib
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
+from urllib.error import URLError
 
-from flask import Blueprint, request
+from flask import Blueprint, request, redirect
 from pydantic import ValidationError
 
 from auth_utils import jwt_required, get_current_user_id
+from config import Config
 from database import health_check as db_health_check, get_connection_status
 from models import ComparisonRequest, DestinationRequest, ItineraryGenerateRequest
 from services.gemini_service import gemini_service
@@ -26,6 +31,57 @@ from utils.responses import success_response, error_response
 
 
 api_bp = Blueprint('api', __name__)
+
+
+def _fallback_image_url(destination: str, width: int = 800, height: int = 600) -> str:
+    seed = int(hashlib.sha1((destination or 'destination').encode('utf-8')).hexdigest(), 16) % 1000
+    return f"https://picsum.photos/seed/{seed}/{width}/{height}"
+
+
+def _unsplash_image_url(destination: str, width: int = 800, height: int = 600) -> str:
+    if not Config.UNSPLASH_ACCESS_KEY:
+        return _fallback_image_url(destination, width, height)
+
+    params = urlencode(
+        {
+            'query': destination,
+            'page': 1,
+            'per_page': 1,
+            'orientation': 'landscape',
+        }
+    )
+    request_url = f"https://api.unsplash.com/search/photos?{params}"
+    request_obj = Request(
+        request_url,
+        headers={
+            'Authorization': f"Client-ID {Config.UNSPLASH_ACCESS_KEY}",
+            'Accept-Version': 'v1',
+        },
+    )
+
+    try:
+        with urlopen(request_obj, timeout=8) as response:
+            import json
+
+            payload = json.loads(response.read().decode('utf-8'))
+            results = payload.get('results') or []
+            if not results:
+                return _fallback_image_url(destination, width, height)
+
+            image = results[0]
+            urls = image.get('urls') or {}
+            if urls.get('regular'):
+                return urls['regular']
+            if urls.get('small'):
+                return urls['small']
+            if urls.get('full'):
+                return urls['full']
+
+            return _fallback_image_url(destination, width, height)
+    except URLError:
+        return _fallback_image_url(destination, width, height)
+    except Exception:
+        return _fallback_image_url(destination, width, height)
 
 
 def run_async(coro):
@@ -52,6 +108,25 @@ def health_check():
 @api_bp.route('/db/status', methods=['GET'])
 def database_status():
     return success_response(get_connection_status(), 'Database status fetched')
+
+
+@api_bp.route('/images/destination', methods=['GET'])
+def get_destination_image():
+    destination = (request.args.get('destination') or '').strip()
+    if not destination:
+        return error_response('destination is required', 400)
+
+    try:
+        width = int(request.args.get('w', 800))
+        height = int(request.args.get('h', 600))
+    except ValueError:
+        width, height = 800, 600
+
+    width = max(200, min(width, 2000))
+    height = max(150, min(height, 2000))
+
+    image_url = _unsplash_image_url(destination, width, height)
+    return redirect(image_url, code=302)
 
 
 @api_bp.route('/destination/info', methods=['POST'])
