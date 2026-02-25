@@ -33,46 +33,39 @@ from functools import wraps
 # ==================== LOGGING & DEBUG ====================
 
 class DatabaseLogger:
-    """Custom logger for database operations with color support"""
+    """Custom logger for database operations - quiet by default.
+    Set env VERBOSE_DB=1 to enable detailed logging."""
     
-    COLORS = {
-        'GREEN': '\033[92m',
-        'YELLOW': '\033[93m',
-        'RED': '\033[91m',
-        'BLUE': '\033[94m',
-        'CYAN': '\033[96m',
-        'RESET': '\033[0m',
-        'BOLD': '\033[1m'
-    }
-    
-    @staticmethod
-    def _timestamp():
-        return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    _verbose = os.getenv('VERBOSE_DB', '').strip() == '1'
     
     @classmethod
     def success(cls, message):
-        print(f"{cls.COLORS['GREEN']}[{cls._timestamp()}] SUCCESS: {message}{cls.COLORS['RESET']}")
+        if cls._verbose:
+            print(f"[DB] OK: {message}")
     
     @classmethod
     def warning(cls, message):
-        print(f"{cls.COLORS['YELLOW']}[{cls._timestamp()}] WARNING: {message}{cls.COLORS['RESET']}")
+        if cls._verbose:
+            print(f"[DB] WARN: {message}")
     
     @classmethod
     def error(cls, message):
-        print(f"{cls.COLORS['RED']}[{cls._timestamp()}] ERROR: {message}{cls.COLORS['RESET']}")
+        print(f"[DB] ERROR: {message}")
     
     @classmethod
     def info(cls, message):
-        print(f"{cls.COLORS['BLUE']}[{cls._timestamp()}] INFO: {message}{cls.COLORS['RESET']}")
+        if cls._verbose:
+            print(f"[DB] {message}")
     
     @classmethod
     def debug(cls, message):
-        if Config.DEBUG:
-            print(f"{cls.COLORS['CYAN']}[{cls._timestamp()}] DEBUG: {message}{cls.COLORS['RESET']}")
+        if cls._verbose:
+            print(f"[DB] {message}")
     
     @classmethod
     def connection(cls, message):
-        print(f"{cls.COLORS['BOLD']}{cls.COLORS['GREEN']}[{cls._timestamp()}] CONNECTION: {message}{cls.COLORS['RESET']}")
+        if cls._verbose:
+            print(f"[DB] {message}")
 
 log = DatabaseLogger()
 
@@ -314,10 +307,6 @@ def init_db():
     global _client, _db, _file_users_collection, _connection_retries, _is_connected
     
     with _connection_lock:
-        log.connection("=" * 50)
-        log.connection("INITIALIZING DATABASE CONNECTION")
-        log.connection("=" * 50)
-        
         # Check if URI is configured
         if not Config.MONGODB_URI:
             log.error("MONGODB_URI not configured!")
@@ -338,15 +327,11 @@ def init_db():
                     _is_connected = True
                     _connection_retries = 0
                     
-                    log.connection("=" * 50)
-                    log.success("MONGODB ATLAS CONNECTED SUCCESSFULLY!")
-                    log.info(f"Database: wandrix")
-                    log.info(f"Connection pool: min=5, max=50")
+                    print("[DB] MongoDB connected")
                     
                     # Create indexes for better performance
                     _create_indexes()
                     
-                    log.connection("=" * 50)
                     return _db
                 else:
                     raise ConnectionFailure("Connection test failed")
@@ -392,10 +377,7 @@ def _setup_fallback():
     _is_connected = False
     _db = None
     _file_users_collection = FileBasedCollection(USERS_FILE)
-    log.warning("=" * 50)
-    log.warning("USING FILE-BASED FALLBACK STORAGE")
-    log.warning(f"Storage file: {USERS_FILE}")
-    log.warning("=" * 50)
+    print("[DB] Using file-based fallback storage")
 
 
 def _create_indexes():
@@ -610,4 +592,4 @@ def close_connection():
 
 # ==================== INITIALIZATION MESSAGE ====================
 
-log.info("Database module loaded - call init_db() to connect")
+# Database module ready

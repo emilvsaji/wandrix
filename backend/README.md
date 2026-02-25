@@ -1,79 +1,84 @@
 # Wandrix Backend API
 
-AI-powered Tourism Recommendation and Planning System Backend
+Flask backend for Wandrix (auth, AI compare/itinerary, wishlist, admin).
 
-## Setup
+## Run (Development)
 
-1. Create a virtual environment:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-2. Install dependencies:
-```bash
+cd backend
 pip install -r requirements.txt
-```
-
-3. Set up environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your actual API keys
-```
-
-4. Make sure MongoDB is running locally or update MONGODB_URI in .env
-
-5. Run the application:
-```bash
 python app.py
 ```
 
-## API Endpoints
+Backend starts at: `http://localhost:5000`
 
-### Health Check
-- `GET /api/health` - Check if the API is running
+## Environment Variables (`backend/.env`)
 
-### Destinations
-- `POST /api/destination/info` - Get detailed info about a destination
-- `POST /api/destination/highlights` - Get special highlights of a destination
-- `GET /api/destinations/popular` - Get list of popular destinations
+Required:
 
-### Comparison
-- `POST /api/compare` - Compare two destinations based on preferences
-- `GET /api/comparisons/history` - Get recent comparison history
+- `GEMINI_API_KEY`
 
-### Itinerary
-- `POST /api/itinerary/generate` - Generate a personalized travel itinerary
-- `GET /api/itinerary/<id>` - Get a saved itinerary
+Common:
 
-## Example Requests
+- `MONGODB_URI`
+- `UNSPLASH_ACCESS_KEY`
+- `SECRET_KEY`
+- `JWT_SECRET`
+- `JWT_EXPIRATION_HOURS`
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+- `ADMIN_NAME`
+- `FLASK_DEBUG` (default in code is `False`)
 
-### Compare Destinations
-```json
-POST /api/compare
-{
-    "destination1": "Paris",
-    "destination2": "Tokyo",
-    "preferences": {
-        "budget": "medium",
-        "travel_duration": 7,
-        "interests": ["culture", "food", "history"],
-        "season": "spring",
-        "travel_type": "couple"
-    }
-}
-```
+Optional:
 
-### Generate Itinerary
-```json
-POST /api/itinerary/generate
-{
-    "destination": "Paris",
-    "preferences": {
-        "travel_duration": 5,
-        "budget": "medium",
-        "interests": ["art", "food", "romance"],
-        "travel_type": "couple"
-    }
-}
-```
+- `VERBOSE_DB=1` to enable detailed DB logs
+
+## API Base
+
+- `http://localhost:5000/api`
+
+## Endpoints
+
+### Public
+
+- `GET /api/health`
+- `GET /api/db/status`
+- `GET /api/destinations/popular`
+- `GET /api/images/destination?destination=Paris&w=800&h=600`
+- `POST /api/destination/info`
+- `POST /api/destination/highlights`
+
+### Auth
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me` (JWT)
+- `PUT /api/auth/profile` (JWT)
+- `GET /api/auth/wishlist` (JWT)
+- `POST /api/auth/wishlist/add` (JWT)
+- `POST /api/auth/wishlist/remove` (JWT)
+- `GET /api/auth/wishlist/check/<destination_name>` (JWT)
+
+### Compare / Itinerary (JWT)
+
+- `POST /api/compare`
+- `GET /api/comparisons/history`
+- `POST /api/itinerary/generate`
+- `GET /api/itinerary/<itinerary_id>`
+- `GET /api/itineraries/history`
+
+### Admin (JWT admin)
+
+- `GET /api/admin/overview`
+- `GET /api/admin/users`
+- `PATCH /api/admin/users/<user_id>/role`
+- `PATCH /api/admin/users/<user_id>/status`
+- `PATCH /api/admin/users/<user_id>/password`
+- `GET /api/admin/users/<user_id>/activity`
+- `DELETE /api/admin/users/<user_id>`
+
+## Notes
+
+- MongoDB fallback exists for limited local resilience, but full features are best with MongoDB available.
+- Responses use a wrapped `success_response`/`error_response` format.

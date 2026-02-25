@@ -26,20 +26,20 @@ cd Wandrix
 cd backend
 ```
 
-2. Create and activate a virtual environment
+2. Create and activate a virtual environment (recommended)
 
 PowerShell (recommended on Windows):
 
 ```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
+python -m venv ..\.venv
+..\.venv\Scripts\Activate.ps1
 ```
 
 Command Prompt (cmd.exe):
 
 ```cmd
-python -m venv .venv
-.venv\Scripts\activate
+python -m venv ..\.venv
+..\.venv\Scripts\activate
 ```
 
 3. Install Python dependencies
@@ -56,9 +56,14 @@ Create a `.env` file inside the `backend` directory with the following variables
 MONGODB_URI=mongodb://localhost:27017/wandrix
 GEMINI_API_KEY=
 SECRET_KEY=your-secret-key
-FLASK_DEBUG=True
 JWT_SECRET=your-jwt-secret
+FLASK_ENV=development
+FLASK_DEBUG=False
 JWT_EXPIRATION_HOURS=24
+UNSPLASH_ACCESS_KEY=
+ADMIN_EMAIL=
+ADMIN_PASSWORD=
+ADMIN_NAME=Wandrix Admin
 ```
 
 Notes:
@@ -72,6 +77,15 @@ python app.py
 ```
 
 By default the server will start on `http://0.0.0.0:5000`.
+
+### Minimal daily command flow
+
+If your workspace terminal is configured to use the project interpreter, you can run directly without manual activation:
+
+```bash
+cd backend
+python app.py
+```
 
 6. Optional: Run with a production WSGI server (Linux / WSL)
 
@@ -106,6 +120,22 @@ The Vite dev server typically runs at `http://localhost:5173` and the frontend i
 - Start the backend in one terminal (`cd backend` → `python app.py`).
 - Start the frontend in another terminal (`cd frontend` → `npm run dev`).
 
+## VS Code Terminal Noise (Activation Path)
+
+If you see the full `...\.venv\Scripts\Activate.ps1` command printed every time a terminal opens, disable auto-activation in workspace settings:
+
+```json
+{
+	"python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+	"python.terminal.activateEnvironment": false,
+	"terminal.integrated.env.windows": {
+		"PATH": "${workspaceFolder}\\.venv\\Scripts;${env:PATH}"
+	}
+}
+```
+
+Then open a new terminal.
+
 ## Tests
 
 If you want to run the backend tests:
@@ -123,6 +153,7 @@ Adjust or add testing dependencies as needed.
 - Database connection errors: verify `MONGODB_URI` and that MongoDB is reachable.
 - Port in use: ensure ports `5000` (backend) and `5173` (frontend) are free or change them.
 - Missing API key: provide `GEMINI_API_KEY` in `.env` if you need Gemini features.
+- `python` not found: ensure `.venv\Scripts` is in terminal `PATH` or activate the environment manually.
 
 ## Production & Deployment Notes
 

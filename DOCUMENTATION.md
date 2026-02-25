@@ -127,7 +127,7 @@ User Display ← React Components ← JSON Response ← MongoDB (optional save)
 
 | Technology | Purpose |
 |------------|---------|
-| Google Gemini 2.5 Flash | AI Content Generation |
+| Google Gemini (model selected by backend service) | AI Content Generation |
 
 ---
 
@@ -175,7 +175,7 @@ def create_app():
 | `MONGODB_URI` | MongoDB connection string | `mongodb://localhost:27017/wandrix` |
 | `GEMINI_API_KEY` | Google Gemini API key | Required |
 | `SECRET_KEY` | Flask secret key | `dev-secret-key` |
-| `DEBUG` | Debug mode flag | `True` |
+| `DEBUG` | Debug mode flag | `False` |
 
 #### 4.2.3 database.py - Database Layer
 
@@ -369,6 +369,13 @@ Explore → Select Destination → Compare Page
 ```javascript
 const api = {
   healthCheck(),                                    // GET /api/health
+  register(name, email, password),                  // POST /api/auth/register
+  login(email, password),                           // POST /api/auth/login
+  getMe(),                                          // GET /api/auth/me (JWT)
+  updateProfile({ name, avatar_url }),              // PUT /api/auth/profile (JWT)
+  getWishlist(),                                    // GET /api/auth/wishlist (JWT)
+  addToWishlist(destination),                       // POST /api/auth/wishlist/add (JWT)
+  removeFromWishlist(destinationName),              // POST /api/auth/wishlist/remove (JWT)
   getDestinationInfo(destination),                  // POST /api/destination/info
   getDestinationHighlights(destination),            // POST /api/destination/highlights
   compareDestinations(dest1, dest2, preferences),   // POST /api/compare
@@ -376,6 +383,9 @@ const api = {
   getItinerary(itineraryId),                       // GET /api/itinerary/:id
   getPopularDestinations(),                         // GET /api/destinations/popular
   getComparisonHistory(),                          // GET /api/comparisons/history
+  getItineraryHistory(),                           // GET /api/itineraries/history
+  getAdminOverview(),                              // GET /api/admin/overview (JWT admin)
+  getAdminUsers(),                                 // GET /api/admin/users (JWT admin)
 };
 ```
 
@@ -686,6 +696,25 @@ GET /api/comparisons/history
 }
 ```
 
+#### Additional Protected Endpoints
+
+These endpoints are used by the current frontend and require JWT unless marked admin:
+
+- `GET /api/itineraries/history`
+- `GET /api/auth/me`
+- `PUT /api/auth/profile`
+- `GET /api/auth/wishlist`
+- `POST /api/auth/wishlist/add`
+- `POST /api/auth/wishlist/remove`
+- `GET /api/auth/wishlist/check/{destination_name}`
+- `GET /api/admin/overview` (admin)
+- `GET /api/admin/users` (admin)
+- `PATCH /api/admin/users/{user_id}/role` (admin)
+- `PATCH /api/admin/users/{user_id}/status` (admin)
+- `PATCH /api/admin/users/{user_id}/password` (admin)
+- `GET /api/admin/users/{user_id}/activity` (admin)
+- `DELETE /api/admin/users/{user_id}` (admin)
+
 ---
 
 ## 7. Database Schema
@@ -759,13 +788,13 @@ GET /api/comparisons/history
 cd backend
 
 # Create virtual environment
-python -m venv venv
+python -m venv ..\.venv
 
 # Activate virtual environment
 # On Windows:
-venv\Scripts\activate
+..\.venv\Scripts\activate
 # On macOS/Linux:
-source venv/bin/activate
+source ../.venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -805,7 +834,7 @@ GEMINI_API_KEY=your_google_gemini_api_key
 # Optional (defaults shown)
 MONGODB_URI=mongodb://localhost:27017/wandrix
 SECRET_KEY=your-secret-key-here
-FLASK_DEBUG=True
+FLASK_DEBUG=False
 ```
 
 ---
@@ -819,7 +848,7 @@ FLASK_DEBUG=True
 | Database URI | `MONGODB_URI` | `mongodb://localhost:27017/wandrix` | MongoDB connection string |
 | Gemini API Key | `GEMINI_API_KEY` | - | Google Gemini API key (required) |
 | Secret Key | `SECRET_KEY` | `dev-secret-key` | Flask secret key |
-| Debug Mode | `FLASK_DEBUG` | `True` | Enable/disable debug mode |
+| Debug Mode | `FLASK_DEBUG` | `False` | Enable/disable debug mode |
 
 ### 9.2 Frontend Configuration
 
@@ -1014,8 +1043,8 @@ For issues and feature requests, please create an issue in the project repositor
 
 ---
 
-**Documentation Version:** 2.0.0  
-**Last Updated:** February 1, 2026  
+**Documentation Version:** 2.1.0  
+**Last Updated:** February 25, 2026  
 **Author:** Wandrix Development Team
 
 ---
@@ -1227,7 +1256,7 @@ frontend/src/
 **New Dependencies:**
 ```json
 {
-  "react-router-dom": "^6.x"  // URL-based routing
+  "react-router-dom": "^7.x"  // URL-based routing
 }
 ```
 

@@ -5,7 +5,8 @@ import time
 import warnings
 from typing import Any, Dict, List, Optional
 
-warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="google")
 
 import google.generativeai as genai
 from google.api_core.exceptions import NotFound, ResourceExhausted, GoogleAPICallError

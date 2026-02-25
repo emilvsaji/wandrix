@@ -17,7 +17,7 @@ class Config:
     
     # Flask
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
-    DEBUG = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
+    DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
     
     # JWT Configuration
     JWT_SECRET = os.getenv('JWT_SECRET', 'wandrix-jwt-secret-key-super-secure-2026')
