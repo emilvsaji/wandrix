@@ -2,6 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from config import Config
 from database import init_db
+from services.admin_seed_service import seed_admin_user
 from routes.api import api_bp
 from routes.auth import auth_bp
 from routes.admin import admin_bp
@@ -24,6 +25,7 @@ def create_app():
     # Initialize database
     try:
         init_db()
+        seed_admin_user()
     except Exception as e:
         print(f"[APP] Database initialization error: {e}")
     

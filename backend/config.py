@@ -23,5 +23,7 @@ class Config:
     JWT_SECRET = os.getenv('JWT_SECRET', 'wandrix-jwt-secret-key-super-secure-2026')
     JWT_EXPIRATION_HOURS = int(os.getenv('JWT_EXPIRATION_HOURS', '24'))
 
-    # Admin
-    ADMIN_EMAILS = [email.strip().lower() for email in os.getenv('ADMIN_EMAILS', '').split(',') if email.strip()]
+    # Admin (seeded user)
+    ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', '').strip().lower()
+    ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '')
+    ADMIN_NAME = os.getenv('ADMIN_NAME', 'Wandrix Admin').strip()

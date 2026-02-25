@@ -85,6 +85,48 @@ function AdminPage() {
     }
   };
 
+  const handleToggleBlock = async (listedUser) => {
+    if (!listedUser?._id || listedUser._id === user.id) return;
+
+    const shouldBlock = !Boolean(listedUser.is_blocked);
+    let blockedReason = '';
+
+    if (shouldBlock) {
+      blockedReason = window.prompt('Optional reason for blocking this user:', '') || '';
+    }
+
+    try {
+      setBusyUserId(listedUser._id);
+      await api.updateAdminUserStatus(listedUser._id, shouldBlock, blockedReason);
+      await loadAdminData();
+      if (selectedUserActivity?.user?._id === listedUser._id) {
+        setSelectedUserActivity(null);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to update user status');
+    } finally {
+      setBusyUserId('');
+    }
+  };
+
+  const handleResetPassword = async (listedUser) => {
+    if (!listedUser?._id) return;
+
+    const newPassword = window.prompt(`Set new password for ${listedUser.name || listedUser.email}:`, '');
+    if (!newPassword) return;
+
+    try {
+      setBusyUserId(listedUser._id);
+      await api.resetAdminUserPassword(listedUser._id, newPassword);
+      setError('');
+      window.alert('Password reset successfully.');
+    } catch (err) {
+      setError(err.message || 'Failed to reset password');
+    } finally {
+      setBusyUserId('');
+    }
+  };
+
   const handleViewActivity = async (listedUser) => {
     try {
       setBusyUserId(listedUser._id);
@@ -187,10 +229,14 @@ function AdminPage() {
                           <span className={`badge ${listedUser.is_admin ? 'admin' : 'member'}`}>
                             {listedUser.is_admin ? 'Admin' : 'User'}
                           </span>
+                          {listedUser.is_blocked && <span className="badge blocked">Blocked</span>}
                           <span className="badge">Wishlist: {listedUser.wishlist_count || 0}</span>
                           <span className="badge">Comparisons: {listedUser.comparison_count || 0}</span>
                           <span className="badge">Itineraries: {listedUser.itinerary_count || 0}</span>
                         </div>
+                        {listedUser.is_blocked && listedUser.blocked_reason && (
+                          <p className="user-note">Reason: {listedUser.blocked_reason}</p>
+                        )}
                       </div>
                       <div className="user-actions">
                         <button onClick={() => handleViewActivity(listedUser)} disabled={isBusy}>
@@ -205,6 +251,16 @@ function AdminPage() {
                           disabled={isBusy || isSelf}
                         >
                           Delete
+                        </button>
+                        <button
+                          className={listedUser.is_blocked ? 'warning' : ''}
+                          onClick={() => handleToggleBlock(listedUser)}
+                          disabled={isBusy || isSelf}
+                        >
+                          {listedUser.is_blocked ? 'Unblock' : 'Block'}
+                        </button>
+                        <button onClick={() => handleResetPassword(listedUser)} disabled={isBusy}>
+                          Reset Password
                         </button>
                       </div>
                     </div>
@@ -264,7 +320,7 @@ function AdminPage() {
         </div>
 
         <div className="admin-footer-note">
-          <p>Admins can manage users, inspect activity, assign/revoke admin rights, and remove accounts.</p>
+          <p>Admins can manage users, inspect activity, assign/revoke admin rights, block/unblock accounts, reset passwords, and remove accounts.</p>
         </div>
       </div>
     </div>

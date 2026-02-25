@@ -49,6 +49,12 @@ def jwt_required(fn):
             g.current_user_is_admin = bool(payload.get("is_admin", False))
             if not g.current_user_id:
                 return error_response("Invalid token payload", 401)
+
+            user = get_current_user()
+            if user is None:
+                return error_response("User not found", 401)
+            if bool(user.get('is_blocked', False)):
+                return error_response("Your account is blocked. Contact support.", 403)
         except jwt.ExpiredSignatureError:
             return error_response("Token has expired", 401)
         except jwt.InvalidTokenError:

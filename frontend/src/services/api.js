@@ -170,6 +170,22 @@ export const api = {
       requiresAuth: true,
     });
   },
+
+  updateAdminUserStatus(userId, is_blocked, blocked_reason = '') {
+    return request(`/admin/users/${userId}/status`, {
+      method: 'PATCH',
+      requiresAuth: true,
+      body: { is_blocked, blocked_reason },
+    });
+  },
+
+  resetAdminUserPassword(userId, new_password) {
+    return request(`/admin/users/${userId}/password`, {
+      method: 'PATCH',
+      requiresAuth: true,
+      body: { new_password },
+    });
+  },
 };
 
 export { ApiError };

@@ -143,6 +143,17 @@
   border-color: rgba(59, 130, 246, 0.5);
 }
 
+.badge.blocked {
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
+.user-note {
+  margin-top: 8px;
+  color: #fca5a5;
+  font-size: 0.75rem;
+}
+
 .user-actions {
   display: flex;
   flex-direction: column;
@@ -167,6 +178,11 @@
 .user-actions button.danger {
   color: #fca5a5;
   border-color: rgba(239, 68, 68, 0.35);
+}
+
+.user-actions button.warning {
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.4);
 }
 
 .user-actions button:disabled {

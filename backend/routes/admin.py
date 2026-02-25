@@ -1,6 +1,7 @@
 from bson import ObjectId
 from bson.errors import InvalidId
 from flask import Blueprint, request
+from werkzeug.security import generate_password_hash
 
 from auth_utils import admin_required, get_current_user_id
 from database import get_db
@@ -69,6 +70,8 @@ def list_users():
             users.append(
                 {
                     **_safe_user_projection(user),
+                    'is_blocked': bool(user.get('is_blocked', False)),
+                    'blocked_reason': user.get('blocked_reason'),
                     'wishlist_count': len(user.get('wishlist', []) or []),
                     'comparison_count': database.comparisons.count_documents({'user_id': user_id_str}),
                     'itinerary_count': database.itineraries.count_documents({'user_id': user_id_str}),
@@ -199,5 +202,73 @@ def get_user_activity(user_id):
             },
             'User activity fetched',
         )
+    except Exception as e:
+        return error_response(str(e), 500)
+
+
+@admin_bp.route('/users/<user_id>/status', methods=['PATCH'])
+@admin_required
+def update_user_status(user_id):
+    database = get_db()
+    if database is None:
+        return error_response('Database not available', 500)
+
+    payload = request.get_json() or {}
+    is_blocked = payload.get('is_blocked')
+    blocked_reason = (payload.get('blocked_reason') or '').strip()
+
+    if not isinstance(is_blocked, bool):
+        return error_response('is_blocked must be a boolean', 400)
+
+    current_user_id = get_current_user_id()
+    if str(current_user_id) == str(user_id):
+        return error_response('You cannot change your own blocked status', 400)
+
+    object_id = _to_object_id(user_id)
+    if object_id is None:
+        return error_response('Invalid user id', 400)
+
+    try:
+        user = database.users.find_one({'_id': object_id})
+        if not user:
+            return error_response('User not found', 404)
+
+        updates = {
+            'is_blocked': is_blocked,
+            'blocked_reason': blocked_reason if is_blocked and blocked_reason else None,
+        }
+        database.users.update_one({'_id': object_id}, {'$set': updates})
+        updated = database.users.find_one({'_id': object_id}, {'password': 0})
+        return success_response({'user': _safe_user_projection(updated)}, 'User status updated')
+    except Exception as e:
+        return error_response(str(e), 500)
+
+
+@admin_bp.route('/users/<user_id>/password', methods=['PATCH'])
+@admin_required
+def reset_user_password(user_id):
+    database = get_db()
+    if database is None:
+        return error_response('Database not available', 500)
+
+    payload = request.get_json() or {}
+    new_password = payload.get('new_password') or ''
+    if len(new_password) < 6:
+        return error_response('new_password must be at least 6 characters', 400)
+
+    object_id = _to_object_id(user_id)
+    if object_id is None:
+        return error_response('Invalid user id', 400)
+
+    try:
+        user = database.users.find_one({'_id': object_id})
+        if not user:
+            return error_response('User not found', 404)
+
+        database.users.update_one(
+            {'_id': object_id},
+            {'$set': {'password': generate_password_hash(new_password)}},
+        )
+        return success_response({}, 'User password reset successfully')
     except Exception as e:
         return error_response(str(e), 500)

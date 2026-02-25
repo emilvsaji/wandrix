@@ -7,7 +7,6 @@ from pydantic import ValidationError
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from auth_utils import generate_token, get_current_user, get_current_user_id, jwt_required
-from config import Config
 from database import get_users_collection
 from models import AddWishlistRequest, RemoveWishlistRequest, ProfileUpdateRequest
 from utils.responses import success_response, error_response
@@ -52,7 +51,7 @@ def register():
             "password": generate_password_hash(password),
             "name": name,
             "wishlist": [],
-            "is_admin": email in Config.ADMIN_EMAILS,
+            "is_admin": False,
             "created_at": datetime.utcnow(),
         }
 
@@ -70,6 +69,8 @@ def register():
                     "wishlist": [],
                     "avatar_url": None,
                     "is_admin": user_doc['is_admin'],
+                    "is_blocked": False,
+                    "blocked_reason": None,
                 },
             },
             "Registration successful",
@@ -96,6 +97,8 @@ def login():
         user = users.find_one({"email": email})
         if not user or not check_password_hash(user.get('password', ''), password):
             return error_response('Invalid email or password', 401)
+        if bool(user.get('is_blocked', False)):
+            return error_response('Your account is blocked. Contact support.', 403)
 
         user_id = str(user['_id'])
         is_admin = bool(user.get('is_admin', False))
@@ -111,6 +114,8 @@ def login():
                     "wishlist": user.get('wishlist', []),
                     "avatar_url": user.get('avatar_url'),
                     "is_admin": is_admin,
+                    "is_blocked": bool(user.get('is_blocked', False)),
+                    "blocked_reason": user.get('blocked_reason'),
                     "created_at": user.get('created_at'),
                 },
             },
@@ -136,6 +141,8 @@ def get_me():
                 "wishlist": user.get('wishlist', []),
                 "avatar_url": user.get('avatar_url'),
                 "is_admin": bool(user.get('is_admin', False)),
+                "is_blocked": bool(user.get('is_blocked', False)),
+                "blocked_reason": user.get('blocked_reason'),
                 "created_at": user.get('created_at'),
             }
         },
@@ -271,6 +278,8 @@ def update_profile():
                 'wishlist': updated_user.get('wishlist', []),
                 'avatar_url': updated_user.get('avatar_url'),
                 'is_admin': bool(updated_user.get('is_admin', False)),
+                'is_blocked': bool(updated_user.get('is_blocked', False)),
+                'blocked_reason': updated_user.get('blocked_reason'),
                 'created_at': updated_user.get('created_at'),
             }
         },
