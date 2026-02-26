@@ -28,18 +28,20 @@ cd backend
 
 2. Create and activate a virtual environment (recommended)
 
+Important: never copy an existing `venv` / `.venv` folder from another computer. Always create a new one on the current machine.
+
 PowerShell (recommended on Windows):
 
 ```powershell
-python -m venv ..\.venv
-..\.venv\Scripts\Activate.ps1
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
 ```
 
 Command Prompt (cmd.exe):
 
 ```cmd
-python -m venv ..\.venv
-..\.venv\Scripts\activate
+py -m venv .venv
+.venv\Scripts\activate
 ```
 
 3. Install Python dependencies
@@ -77,6 +79,21 @@ python app.py
 ```
 
 By default the server will start on `http://0.0.0.0:5000`.
+
+### One-click backend start (Windows)
+
+From the project root:
+
+```powershell
+./backend/run.ps1
+```
+
+Or double-click `backend/run.bat` in File Explorer.
+
+The launcher will:
+- create `backend/.venv` if missing,
+- install `backend/requirements.txt`,
+- start `backend/app.py`.
 
 ### Minimal daily command flow
 
@@ -126,10 +143,10 @@ If you see the full `...\.venv\Scripts\Activate.ps1` command printed every time 
 
 ```json
 {
-	"python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+	"python.defaultInterpreterPath": "${workspaceFolder}\\backend\\.venv\\Scripts\\python.exe",
 	"python.terminal.activateEnvironment": false,
 	"terminal.integrated.env.windows": {
-		"PATH": "${workspaceFolder}\\.venv\\Scripts;${env:PATH}"
+		"PATH": "${workspaceFolder}\\backend\\.venv\\Scripts;${env:PATH}"
 	}
 }
 ```
@@ -149,6 +166,17 @@ pytest -q
 Adjust or add testing dependencies as needed.
 
 ## Troubleshooting
+
+- Error like `did not find executable at ...python.exe`: you are using a copied/stale virtual environment. Delete `backend/.venv` (and any root `.venv`), then recreate it:
+
+```powershell
+cd backend
+Remove-Item -Recurse -Force .venv
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python app.py
+```
 
 - Database connection errors: verify `MONGODB_URI` and that MongoDB is reachable.
 - Port in use: ensure ports `5000` (backend) and `5173` (frontend) are free or change them.
