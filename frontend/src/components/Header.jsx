@@ -46,18 +46,28 @@ function Header({ currentPage, setCurrentPage }) {
         <div className="header-actions">
           {user ? (
             <div className="user-menu">
-              <button 
+              <button
                 className="profile-btn"
                 onClick={() => {
                   setCurrentPage('profile');
                   setMenuOpen(false);
                 }}
               >
-                Profile
+                <span className="profile-btn-avatar">
+                  {user.avatar_url ? (
+                    <img src={user.avatar_url} alt="" className="profile-btn-img" />
+                  ) : (
+                    user.name?.charAt(0)?.toUpperCase() || 'U'
+                  )}
+                </span>
+                <span className="profile-btn-name">{user.name?.split(' ')[0] || 'Profile'}</span>
+                <svg className="profile-btn-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
               </button>
               <div className="user-dropdown">
-                <button 
-                  className="dropdown-item logout-btn" 
+                <button
+                  className="dropdown-item logout-btn"
                   onClick={handleLogout}
                 >
                   Logout
