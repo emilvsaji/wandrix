@@ -125,6 +125,12 @@ function ComparePage({ initialDestination }) {
             </p>
           </div>
 
+          {apiError && (
+            <div className="comparison-error">
+              <p>{apiError}</p>
+            </div>
+          )}
+
           <div className="compare-form">
             <div className="destinations-row">
               <DestinationInput

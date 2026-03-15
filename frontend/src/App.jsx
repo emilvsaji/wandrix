@@ -13,6 +13,7 @@ import RegisterPage from './pages/RegisterPage';
 import WishlistPage from './pages/WishlistPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
+import AboutPage from './pages/AboutPage';
 
 const LightPillar = lazy(() => import('./components/LightPillar'));
 
@@ -77,6 +78,7 @@ function AppContent() {
             element={<ComparePage initialDestination={location.state?.destination || ''} />} 
           />
           <Route path="/itinerary" element={<ComparePage initialDestination="" />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route 
             path="/explore" 
             element={<ExplorePage onSelectDestination={handleSelectDestination} />} 
@@ -123,7 +125,7 @@ function AppContent() {
               </div>
               <div className="footer-section">
                 <h4>Connect</h4>
-                <a href="#" onClick={(e) => e.preventDefault()}>About Us</a>
+                <a href="#" onClick={(e) => { e.preventDefault(); setCurrentPage('about'); }}>About Us</a>
                 <a href="#" onClick={(e) => e.preventDefault()}>Contact</a>
                 <a href="#" onClick={(e) => e.preventDefault()}>Support</a>
               </div>

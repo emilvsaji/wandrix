@@ -9,10 +9,10 @@ function Header({ currentPage, setCurrentPage }) {
   const navItems = [
     { id: 'home', label: 'Home' },
     { id: 'compare', label: 'Compare' },
-    { id: 'itinerary', label: 'Journey Schedule' },
     { id: 'explore', label: 'Explore' },
     { id: 'wishlist', label: 'Wishlist' },
     ...(user?.is_admin ? [{ id: 'admin', label: 'Admin' }] : []),
+    { id: 'about', label: 'About' },
   ];
 
   const handleLogout = () => {

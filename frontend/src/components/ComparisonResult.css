@@ -270,26 +270,47 @@
   border-radius: var(--radius-full);
 }
 
-/* ── Generate Itinerary Button ── */
+/* ── Generate Itinerary Button — Premium AI CTA ── */
 .generate-itinerary-btn {
   width: 100%;
   margin-top: var(--space-lg);
-  padding: 14px;
+  padding: 16px;
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   color: white;
-  background: var(--color-accent);
+  background: linear-gradient(135deg, #1a5cff 0%, #0a3bcc 100%);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 14px;
   cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-accent);
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow:
+    0 4px 20px rgba(26, 92, 255, 0.3),
+    0 1px 3px rgba(26, 92, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.generate-itinerary-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
 }
 
 .generate-itinerary-btn:hover {
-  background: var(--color-accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(26, 92, 255, 0.25);
+  background: linear-gradient(135deg, #0a3bcc 0%, #072d99 100%);
+  transform: translateY(-3px);
+  box-shadow:
+    0 8px 32px rgba(26, 92, 255, 0.35),
+    0 2px 6px rgba(26, 92, 255, 0.2);
+}
+
+.generate-itinerary-btn:hover::before {
+  opacity: 1;
 }
 
 /* ── VS Divider ── */
