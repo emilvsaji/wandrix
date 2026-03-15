@@ -31,7 +31,7 @@ npm run preview
 
 The frontend talks to the backend at:
 
-- `http://localhost:5000/api`
+- `http://localhost:5050/api`
 
 Configured in:
 

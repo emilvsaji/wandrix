@@ -18,6 +18,10 @@ class Config:
     # Flask
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
     DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+
+    # Server
+    PORT = int(os.getenv('PORT', '8000'))
+    HOST = os.getenv('FLASK_HOST', '127.0.0.1')
     
     # JWT Configuration
     JWT_SECRET = os.getenv('JWT_SECRET', 'wandrix-jwt-secret-key-super-secure-2026')

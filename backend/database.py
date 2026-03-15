@@ -266,12 +266,15 @@ def _create_client():
         'connectTimeoutMS': 10000,           # 10 seconds
         'socketTimeoutMS': 30000,            # 30 seconds
         'maxPoolSize': 50,                   # Maximum connections in pool
-        'minPoolSize': 5,                    # Minimum connections to maintain
-        'maxIdleTimeMS': 60000,              # Close idle connections after 60s
+        'minPoolSize': 1,                    # Keep minimum pool small to reduce background SSL ops
+        'maxIdleTimeMS': 30000,              # Close idle connections after 30s
         'retryWrites': True,                 # Automatic retry for writes
         'retryReads': True,                  # Automatic retry for reads
         'w': 'majority',                     # Write concern
-        'tlsCAFile': certifi.where(),        # SSL certificate
+        'tls': True,                         # Enable TLS/SSL
+        'tlsCAFile': certifi.where(),        # SSL certificate bundle
+        'tlsAllowInvalidCertificates': True, # Fix Windows SSL handshake errors
+        'heartbeatFrequencyMS': 30000,       # Reduce background heartbeat frequency (30s)
         'server_api': ServerApi('1')         # Use Stable API
     }
     

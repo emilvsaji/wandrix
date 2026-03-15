@@ -10,7 +10,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Backend starts at: `http://localhost:5000`
+Backend starts at: `http://localhost:5050`
 
 ## Environment Variables (`backend/.env`)
 
@@ -29,6 +29,7 @@ Common:
 - `ADMIN_PASSWORD`
 - `ADMIN_NAME`
 - `FLASK_DEBUG` (default in code is `False`)
+- `PORT` (default `5050`)
 
 Optional:
 
@@ -36,7 +37,7 @@ Optional:
 
 ## API Base
 
-- `http://localhost:5000/api`
+- `http://localhost:5050/api`
 
 ## Endpoints
 

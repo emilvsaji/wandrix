@@ -433,7 +433,7 @@ const api = {
 ### 6.1 Base URL
 
 ```
-Development: http://localhost:5000/api
+Development: http://localhost:5050/api
 ```
 
 ### 6.2 Endpoints
@@ -788,13 +788,15 @@ These endpoints are used by the current frontend and require JWT unless marked a
 cd backend
 
 # Create virtual environment
-python -m venv ..\.venv
+py -m venv .venv
 
 # Activate virtual environment
-# On Windows:
-..\.venv\Scripts\activate
+# On Windows (PowerShell):
+.\.venv\Scripts\Activate.ps1
+# On Windows (cmd):
+.venv\Scripts\activate
 # On macOS/Linux:
-source ../.venv/bin/activate
+source .venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -805,6 +807,7 @@ cp .env.example .env
 # Edit .env with your configuration
 # GEMINI_API_KEY=your_gemini_api_key
 # MONGODB_URI=mongodb://localhost:27017/wandrix
+# PORT=5050
 
 # Run the application
 python app.py
@@ -860,7 +863,7 @@ export default defineConfig({
   server: {
     port: 5173,  // Dev server port
     proxy: {
-      '/api': 'http://localhost:5000'  // Proxy API requests
+      '/api': 'http://localhost:5050'  // Proxy API requests
     }
   }
 })
@@ -871,7 +874,7 @@ export default defineConfig({
 Edit `frontend/src/services/api.js` to change the backend URL:
 
 ```javascript
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
 ```
 
 ---
@@ -884,7 +887,7 @@ const API_BASE_URL = 'http://localhost:5000/api';
 ```bash
 cd backend
 python app.py
-# Runs on http://localhost:5000
+# Runs on http://localhost:5050
 ```
 
 **Terminal 2 - Frontend:**
@@ -969,7 +972,7 @@ npm run build
 **Backend:**
 ```bash
 cd backend
-gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app()"
+gunicorn -w 4 -b 0.0.0.0:5050 "app:create_app()"
 ```
 
 ### 11.2 Docker Deployment (Optional)
@@ -981,8 +984,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-EXPOSE 5000
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:create_app()"]
+EXPOSE 5050
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5050", "app:create_app()"]
 ```
 
 **Frontend Dockerfile:**
@@ -1321,7 +1324,7 @@ frontend/src/
 ```bash
 cd backend
 python app.py
-# Runs on http://localhost:5000
+# Runs on http://localhost:5050
 ```
 
 **Start Frontend:**

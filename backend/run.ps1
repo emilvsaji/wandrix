@@ -33,5 +33,5 @@ if ($BootstrapOnly) {
     exit 0
 }
 
-Write-Host "[Wandrix] Starting backend on http://localhost:5000 ..."
+Write-Host "[Wandrix] Starting backend (port set in .env or defaults to 8000)..."
 & $venvPython "app.py"

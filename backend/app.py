@@ -13,10 +13,10 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
-    # Enable CORS for React frontend
+    # Enable CORS for React frontend (all common dev ports)
     CORS(app, resources={
         r"/api/*": {
-            "origins": ["http://localhost:5173", "http://localhost:3000", "*"],
+            "origins": ["http://localhost:5173", "http://localhost:3000", "http://localhost:5050", "http://localhost:5051", "http://localhost:8000", "http://localhost:8080", "*"],
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"]
         }
@@ -52,7 +52,31 @@ def create_app():
     return app
 
 if __name__ == '__main__':
+    import os, socket
+
     print("[APP] Starting Wandrix Backend Server...")
     app = create_app()
-    print("[APP] Server starting on http://0.0.0.0:5000")
-    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True, use_reloader=False)
+
+    host = os.getenv('FLASK_HOST', '127.0.0.1')
+    port = int(os.getenv('PORT', '8000'))
+
+    # Auto-detect if port is usable; fall back through alternatives
+    def _port_available(h, p):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind((h, p))
+                return True
+            except OSError:
+                return False
+
+    if not _port_available(host, port):
+        for alt in [5050, 5051, 8000, 8080]:
+            if alt != port and _port_available(host, alt):
+                print(f"[APP] Port {port} unavailable, using {alt} instead")
+                port = alt
+                break
+        else:
+            print(f"[APP] WARNING: Port {port} may be blocked. Trying anyway...")
+
+    print(f"[APP] Server starting on http://{host}:{port}")
+    app.run(host=host, port=port, debug=False, threaded=True, use_reloader=False)

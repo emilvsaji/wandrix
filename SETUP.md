@@ -62,6 +62,7 @@ JWT_SECRET=your-jwt-secret
 FLASK_ENV=development
 FLASK_DEBUG=False
 JWT_EXPIRATION_HOURS=24
+PORT=5050
 UNSPLASH_ACCESS_KEY=
 ADMIN_EMAIL=
 ADMIN_PASSWORD=
@@ -78,7 +79,7 @@ Notes:
 python app.py
 ```
 
-By default the server will start on `http://0.0.0.0:5000`.
+By default the server will start on `http://localhost:5050`.
 
 ### One-click backend start (Windows)
 
@@ -107,7 +108,7 @@ python app.py
 6. Optional: Run with a production WSGI server (Linux / WSL)
 
 ```bash
-gunicorn -w 4 -b 0.0.0.0:5000 app:create_app
+gunicorn -w 4 -b 0.0.0.0:5050 app:create_app
 ```
 
 ## Frontend (React / Vite)
@@ -130,7 +131,7 @@ npm install
 npm run dev
 ```
 
-The Vite dev server typically runs at `http://localhost:5173` and the frontend is configured to interact with the backend APIs at `http://localhost:5000` (CORS is enabled in the backend for common localhost ports).
+The Vite dev server typically runs at `http://localhost:5173` and the frontend is configured to interact with the backend APIs at `http://localhost:5050` (CORS is enabled in the backend for common localhost ports).
 
 ## Running Both Locally
 
@@ -179,7 +180,7 @@ python app.py
 ```
 
 - Database connection errors: verify `MONGODB_URI` and that MongoDB is reachable.
-- Port in use: ensure ports `5000` (backend) and `5173` (frontend) are free or change them.
+- Port in use: ensure ports `5050` (backend) and `5173` (frontend) are free, or set `PORT=<number>` in `backend/.env` and `VITE_API_URL` for the frontend.
 - Missing API key: provide `GEMINI_API_KEY` in `.env` if you need Gemini features.
 - `python` not found: ensure `.venv\Scripts` is in terminal `PATH` or activate the environment manually.
 
