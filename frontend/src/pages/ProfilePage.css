@@ -1,11 +1,11 @@
-/* ProfilePage.css - Modern SaaS Dashboard Style */
+/* ── Profile Dashboard ── */
 
 .profile-dashboard {
   min-height: calc(100vh - 64px);
   padding: var(--space-2xl) var(--space-xl);
   background: var(--color-bg);
   color: var(--color-text);
-  animation: fadeIn 0.4s ease-out;
+  animation: fadeIn 0.35s ease-out;
 }
 
 .profile-container {
@@ -16,29 +16,28 @@
   gap: var(--space-xl);
 }
 
-/* --- Profile Header Card --- */
+/* ── Profile Header Card ── */
 .profile-header-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: var(--space-xl) var(--space-2xl);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-md);
   position: relative;
   overflow: hidden;
 }
 
-/* Subtle gradient overlay for glassmorphism feel */
 .profile-header-card::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--color-primary, #3b82f6), #8b5cf6);
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-accent), #3b82f6);
 }
 
 .profile-header-content {
@@ -49,8 +48,8 @@
 
 .profile-avatar-wrapper {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 76px;
+  height: 76px;
 }
 
 .profile-avatar {
@@ -58,15 +57,15 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary, #3b82f6), #6366f1);
+  background: linear-gradient(135deg, var(--color-accent), #3b82f6);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  font-weight: 600;
+  font-size: 1.75rem;
+  font-weight: 700;
   color: white;
   z-index: 2;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 16px rgba(26, 92, 255, 0.2);
 }
 
 .profile-avatar-image {
@@ -83,93 +82,96 @@
   right: 0;
   bottom: 0;
   border-radius: 50%;
-  background: var(--color-primary, #3b82f6);
-  opacity: 0.4;
+  background: var(--color-accent);
+  opacity: 0.3;
   z-index: 1;
-  animation: pulse 2s infinite;
+  animation: pulse 2.5s infinite;
 }
 
 .profile-user-details {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: 3px;
 }
 
 .profile-name {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   margin: 0;
 }
 
 .profile-email {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   color: var(--color-text-secondary);
   margin: 0;
 }
 
 .profile-badge {
   display: inline-block;
-  margin-top: var(--space-xs);
+  margin-top: 4px;
   font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--color-text-muted);
-  background: rgba(255, 255, 255, 0.05);
-  padding: 4px 10px;
-  border-radius: 12px;
-  border: 1px solid var(--color-border);
+  font-weight: 600;
+  color: var(--color-accent);
+  background: var(--color-accent-muted);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-accent-subtle);
   width: fit-content;
 }
 
 .profile-header-actions {
   display: flex;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
 .btn-edit-profile {
-  background: var(--color-text);
-  color: var(--color-bg);
+  background: var(--color-accent);
+  color: #ffffff;
   border: none;
-  padding: 10px 20px;
+  padding: 10px 22px;
   border-radius: var(--radius-md);
   font-weight: 600;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-accent);
 }
 
 .btn-edit-profile:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+  background: var(--color-accent-hover);
+  box-shadow: 0 6px 20px rgba(26, 92, 255, 0.25);
 }
 
 .btn-logout {
-  background: transparent;
+  background: var(--color-bg-card);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
-  padding: 10px 20px;
+  padding: 10px 22px;
   border-radius: var(--radius-md);
   font-weight: 500;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .btn-logout:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--color-error, #ef4444);
-  border-color: rgba(239, 68, 68, 0.3);
+  background: var(--color-error-muted);
+  color: var(--color-error);
+  border-color: rgba(220, 38, 38, 0.25);
 }
 
 .profile-error-banner {
-  background: rgba(239, 68, 68, 0.12);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--color-error-muted);
+  color: var(--color-error);
+  border: 1px solid rgba(220, 38, 38, 0.2);
   border-radius: var(--radius-md);
   padding: var(--space-md);
+  font-weight: 500;
 }
 
-/* --- Dashboard Grid --- */
+/* ── Dashboard Grid ── */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -177,19 +179,19 @@
 }
 
 .dashboard-card {
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
 }
 
 .dashboard-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--color-border-light);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: transparent;
 }
 
 .card-header {
@@ -197,22 +199,23 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .card-icon {
-  font-size: 1.25rem;
-  background: rgba(255, 255, 255, 0.05);
-  width: 32px;
-  height: 32px;
+  font-size: 1.125rem;
+  background: var(--color-accent-muted);
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-accent-subtle);
 }
 
 .card-header h2 {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   margin: 0;
 }
@@ -223,9 +226,9 @@
 }
 
 .card-footer {
-  padding: var(--space-md) var(--space-lg);
+  padding: 12px var(--space-lg);
   border-top: 1px solid var(--color-border);
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--color-bg-subtle);
   border-bottom-left-radius: var(--radius-lg);
   border-bottom-right-radius: var(--radius-lg);
 }
@@ -234,18 +237,18 @@
   background: none;
   border: none;
   color: var(--color-text-secondary);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: color var(--transition-fast);
   padding: 0;
 }
 
 .btn-text:hover {
-  color: var(--color-text);
+  color: var(--color-accent);
 }
 
-/* --- Card 1: Account Info --- */
+/* ── Account Info ── */
 .info-row {
   display: flex;
   flex-direction: column;
@@ -257,55 +260,58 @@
 }
 
 .info-label {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: var(--color-text-muted);
-  margin-bottom: 4px;
+  margin-bottom: 3px;
+  font-weight: 600;
 }
 
 .info-value {
-  font-size: 0.95rem;
+  font-size: 0.9375rem;
   font-weight: 500;
 }
 
 .badge-style {
   display: inline-block;
-  background: var(--color-accent-muted, rgba(59, 130, 246, 0.1));
-  color: var(--color-primary, #3b82f6);
+  background: var(--color-accent-muted);
+  color: var(--color-accent);
   padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 600;
   width: fit-content;
 }
 
-/* --- Card 2: Travel Stats --- */
+/* ── Travel Stats ── */
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
 .stat-box {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(255, 255, 255, 0.02);
-  padding: var(--space-md);
+  background: var(--color-bg-subtle);
+  padding: 14px var(--space-md);
   border-radius: var(--radius-md);
   border: 1px solid transparent;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .stat-box:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.05);
+  background: var(--color-accent-muted);
+  border-color: var(--color-accent-subtle);
 }
 
 .stat-value {
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--color-text);
+  letter-spacing: -0.02em;
 }
 
 .stat-name {
@@ -314,7 +320,7 @@
   font-weight: 500;
 }
 
-/* --- Card 3: Quick Actions --- */
+/* ── Quick Actions ── */
 .actions-list {
   display: flex;
   flex-direction: column;
@@ -328,32 +334,33 @@
   gap: var(--space-md);
   background: transparent;
   border: 1px solid var(--color-border);
-  padding: var(--space-md);
+  padding: 14px var(--space-md);
   border-radius: var(--radius-md);
   cursor: pointer;
   text-align: left;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
   width: 100%;
 }
 
 .action-item:hover {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: var(--color-border-light);
-  transform: translateX(4px);
+  background: var(--color-accent-muted);
+  border-color: var(--color-accent-subtle);
+  transform: translateX(3px);
 }
 
 .action-icon {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
 }
 
 .action-text {
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 1px;
 }
 
 .action-title {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text);
 }
@@ -365,23 +372,23 @@
 
 .action-arrow {
   color: var(--color-text-muted);
-  transition: transform 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .action-item:hover .action-arrow {
   transform: translateX(2px);
-  color: var(--color-text);
+  color: var(--color-accent);
 }
 
-/* --- Skeletons & Animations --- */
+/* ── Animations ── */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); opacity: 0.4; }
-  50% { transform: scale(1.2); opacity: 0; }
+  0% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.15); opacity: 0; }
   100% { transform: scale(1); opacity: 0; }
 }
 
@@ -391,10 +398,10 @@
 }
 
 .skeleton {
-  background: linear-gradient(90deg, 
-    rgba(255, 255, 255, 0.03) 25%, 
-    rgba(255, 255, 255, 0.08) 50%, 
-    rgba(255, 255, 255, 0.03) 75%
+  background: linear-gradient(90deg,
+    rgba(148, 163, 184, 0.1) 25%,
+    rgba(148, 163, 184, 0.22) 50%,
+    rgba(148, 163, 184, 0.1) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
@@ -406,10 +413,13 @@
   width: 40px;
 }
 
+/* ── Edit Profile Modal ── */
 .profile-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(13, 27, 62, 0.18);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
   z-index: 1000;
@@ -418,15 +428,17 @@
 
 .profile-modal {
   width: min(560px, 100%);
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: var(--space-xl);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-xl);
 }
 
 .profile-modal h3 {
   margin: 0 0 var(--space-lg);
+  font-weight: 700;
+  font-size: 1.25rem;
 }
 
 .profile-form {
@@ -438,27 +450,30 @@
 .profile-form-label {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
-  font-size: 0.9rem;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--color-text-secondary);
 }
 
 .profile-form-input,
 .profile-form-file {
   width: 100%;
-  background: var(--color-bg);
+  background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   color: var(--color-text);
   border-radius: var(--radius-md);
-  padding: 10px 12px;
-  font-size: 0.95rem;
+  padding: 10px 14px;
+  font-size: 0.9375rem;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-xs);
 }
 
 .profile-form-input:focus,
 .profile-form-file:focus {
   border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(26, 92, 255, 0.1);
 }
 
 .profile-avatar-preview-wrap {
@@ -468,21 +483,24 @@
 }
 
 .profile-avatar-preview {
-  width: 88px;
-  height: 88px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--color-border-light);
+  border: 3px solid var(--color-accent-subtle);
+  box-shadow: var(--shadow-md);
 }
 
 .profile-form-error {
-  color: #fca5a5;
-  font-size: 0.85rem;
+  color: var(--color-error);
+  font-size: 0.8125rem;
+  font-weight: 500;
 }
 
 .profile-form-success {
-  color: #86efac;
-  font-size: 0.85rem;
+  color: var(--color-success);
+  font-size: 0.8125rem;
+  font-weight: 500;
 }
 
 .profile-form-actions {
@@ -492,37 +510,42 @@
   gap: var(--space-sm);
 }
 
-/* --- Responsive Breakpoints --- */
+/* ── Responsive ── */
 @media (max-width: 1024px) {
   .dashboard-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .quick-actions-card {
     grid-column: span 2;
   }
 }
 
 @media (max-width: 768px) {
+  .profile-dashboard {
+    padding: var(--space-lg) var(--space-md);
+  }
+
   .profile-header-card {
     flex-direction: column;
     text-align: center;
     gap: var(--space-lg);
+    padding: var(--space-xl);
   }
-  
+
   .profile-header-content {
     flex-direction: column;
   }
-  
+
   .profile-header-actions {
     width: 100%;
     justify-content: center;
   }
-  
+
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .quick-actions-card {
     grid-column: span 1;
   }

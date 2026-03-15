@@ -1,15 +1,16 @@
+/* ── Destination Input ── */
 .destination-input {
   position: relative;
 }
 
 .input-label {
   display: block;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 600;
   color: var(--color-text-muted);
   margin-bottom: var(--space-sm);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .input-wrapper {
@@ -20,60 +21,80 @@
 
 .input-icon {
   position: absolute;
-  left: var(--space-md);
+  left: 14px;
   color: var(--color-text-muted);
+  transition: color var(--transition-fast);
 }
 
 .destination-text-input {
   width: 100%;
-  padding: var(--space-md) var(--space-md) var(--space-md) 2.75rem;
+  padding: 13px 16px 13px 2.75rem;
   font-size: 0.9375rem;
   color: var(--color-text);
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   outline: none;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-xs);
 }
 
 .destination-text-input:focus {
   border-color: var(--color-accent);
-  background: var(--color-bg-card);
+  box-shadow: 0 0 0 3px rgba(26, 92, 255, 0.1);
+}
+
+.destination-text-input:focus + .input-icon,
+.destination-text-input:focus ~ .input-icon {
+  color: var(--color-accent);
 }
 
 .destination-text-input::placeholder {
-  color: var(--color-text-muted);
+  color: var(--color-text-faint);
 }
 
-/* Suggestions Dropdown */
+/* ── Suggestions Dropdown ── */
 .suggestions-dropdown {
   position: absolute;
   top: 100%;
   left: 0;
   right: 0;
-  margin-top: var(--space-xs);
+  margin-top: 6px;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   z-index: 100;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-lg);
+  animation: dropdownIn 0.15s ease-out;
+}
+
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .suggestions-header {
-  padding: var(--space-sm) var(--space-md);
+  padding: 8px 14px;
   font-size: 0.6875rem;
   font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   background: var(--color-bg-elevated);
   border-bottom: 1px solid var(--color-border);
 }
 
 .suggestions-list {
-  max-height: 240px;
+  max-height: 260px;
   overflow-y: auto;
+  padding: var(--space-xs);
 }
 
 .suggestion-item {
@@ -81,21 +102,23 @@
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-sm) var(--space-md);
+  padding: 10px 12px;
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: all 0.1s ease;
+  transition: all var(--transition-fast);
   text-align: left;
+  border-radius: var(--radius-md);
 }
 
 .suggestion-item:hover {
-  background: var(--color-bg-elevated);
+  background: var(--color-accent-muted);
 }
 
 .suggestion-info {
   display: flex;
   flex-direction: column;
+  gap: 1px;
 }
 
 .suggestion-name {
@@ -109,28 +132,29 @@
   color: var(--color-text-muted);
 }
 
-/* Quick Select Chips */
+/* ── Quick Select Chips ── */
 .quick-select {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-xs);
+  gap: 6px;
   margin-top: var(--space-sm);
 }
 
 .quick-chip {
-  padding: var(--space-xs) var(--space-sm);
+  padding: 5px 12px;
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--color-text-secondary);
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
 }
 
 .quick-chip:hover {
-  background: var(--color-bg-card);
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border-light);
   color: var(--color-text);
 }
 
@@ -138,4 +162,5 @@
   background: var(--color-accent-muted);
   border-color: var(--color-accent);
   color: var(--color-accent);
+  font-weight: 600;
 }

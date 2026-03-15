@@ -1,9 +1,31 @@
+/* ================================================================
+   APP SHELL — Layout, footer, scrollbar, selection
+   Theme: Premium white & blue
+   ================================================================ */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* ── App Root Transition ── */
+.app-root-content {
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-root-content--hidden {
+  opacity: 0;
+  transform: scale(0.99);
+  pointer-events: none;
+}
+
+.app-root-content--visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ── App Shell ── */
 .app {
   position: relative;
   isolation: isolate;
@@ -22,6 +44,7 @@
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
+  display: none;
 }
 
 .main-content {
@@ -30,18 +53,21 @@
   flex: 1;
 }
 
-/* Footer */
+/* ================================================================
+   FOOTER — Clean white & blue
+   ================================================================ */
+
 .footer {
   position: relative;
   z-index: 1;
-  background: linear-gradient(180deg, rgba(10, 10, 11, 0.55) 0%, rgba(10, 10, 11, 0.82) 100%);
+  background: var(--color-bg-card);
   border-top: 1px solid var(--color-border);
   padding: var(--space-2xl) var(--space-xl);
   margin-top: auto;
 }
 
 .footer-content {
-  max-width: 1100px;
+  max-width: 1320px;
   margin: 0 auto;
 }
 
@@ -56,27 +82,29 @@
 .footer-brand {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: 6px;
 }
 
 .footer-logo {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  font-size: 1.25rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
   font-weight: 600;
   color: var(--color-text);
   letter-spacing: -0.02em;
 }
 
 .footer-logo svg {
-  color: var(--color-primary);
+  color: var(--color-accent);
 }
 
 .footer-tagline {
-  color: var(--color-primary);
+  color: var(--color-accent);
+  font-family: var(--font-body);
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.02em;
 }
 
@@ -95,12 +123,13 @@
 }
 
 .footer-section h4 {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 700;
   color: var(--color-text);
   margin-bottom: var(--space-md);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
 }
 
 .footer-section a {
@@ -108,12 +137,12 @@
   color: var(--color-text-muted);
   text-decoration: none;
   font-size: 0.875rem;
-  padding: var(--space-xs) 0;
-  transition: color 0.2s ease;
+  padding: 4px 0;
+  transition: color var(--transition-fast);
 }
 
 .footer-section a:hover {
-  color: var(--color-primary);
+  color: var(--color-accent);
 }
 
 .footer-bottom {
@@ -138,11 +167,11 @@
   font-size: 0.8125rem;
   color: var(--color-text-muted);
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color var(--transition-fast);
 }
 
 .footer-legal a:hover {
-  color: var(--color-text);
+  color: var(--color-accent);
 }
 
 .footer-legal .divider {
@@ -150,7 +179,7 @@
   font-size: 0.75rem;
 }
 
-/* Scrollbar */
+/* ── Scrollbar ── */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -169,12 +198,13 @@
   background: var(--color-text-muted);
 }
 
-/* Selection */
+/* ── Selection ── */
 ::selection {
-  background: rgba(59, 130, 246, 0.3);
-  color: white;
+  background: rgba(26, 92, 255, 0.15);
+  color: var(--color-text);
 }
 
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .footer {
     padding: var(--space-xl) var(--space-md);

@@ -127,7 +127,7 @@
 
 .search-result-card:hover {
   border-color: var(--color-accent);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 20px rgba(10, 59, 204, 0.08);
 }
 
 .search-result-image {
@@ -242,8 +242,8 @@
 
 .destination-tile:hover {
   border-color: var(--color-border-light);
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(10, 59, 204, 0.08);
 }
 
 .tile-image {
@@ -272,11 +272,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(10, 10, 11, 0.7);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-accent);
   cursor: pointer;
   transition: all 0.15s ease;
   z-index: 2;
@@ -288,15 +288,15 @@
 }
 
 .wishlist-btn:hover {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.2);
-  border-color: #ef4444;
+  color: #ffffff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 .wishlist-btn.active {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.2);
-  border-color: #ef4444;
+  color: #ffffff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 .tile-content {
@@ -325,7 +325,7 @@
 .destination-modal {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 11, 0.9);
+  background: rgba(10, 59, 204, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -343,6 +343,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   overflow-y: auto;
+  box-shadow: 0 12px 36px rgba(10, 59, 204, 0.12);
 }
 
 .modal-image {
@@ -366,10 +367,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  background: rgba(10, 10, 11, 0.6);
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   cursor: pointer;
   z-index: 10;
@@ -377,7 +378,7 @@
 }
 
 .modal-close:hover {
-  background: rgba(10, 10, 11, 0.8);
+  background: #ffffff;
 }
 
 .modal-header {

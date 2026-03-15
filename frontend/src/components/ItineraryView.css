@@ -1,3 +1,4 @@
+/* ── Itinerary View ── */
 .itinerary-view {
   max-width: 900px;
   margin: 0 auto;
@@ -7,21 +8,24 @@
 .back-btn {
   display: inline-flex;
   align-items: center;
-  padding: var(--space-sm) var(--space-md);
+  gap: var(--space-xs);
+  padding: 8px 16px;
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--color-text-secondary);
-  background: transparent;
+  background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
   margin-bottom: var(--space-xl);
+  box-shadow: var(--shadow-xs);
 }
 
 .back-btn:hover {
   color: var(--color-text);
-  background: var(--color-bg-card);
+  border-color: var(--color-border-light);
+  box-shadow: var(--shadow-sm);
 }
 
 .itinerary-header {
@@ -34,16 +38,16 @@
 
 .itinerary-title {
   font-size: 1.75rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text);
   margin-bottom: var(--space-md);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
 .itinerary-overview {
   font-size: 1rem;
   color: var(--color-text-secondary);
-  line-height: 1.6;
+  line-height: 1.65;
   max-width: 600px;
   margin: 0 auto var(--space-xl);
 }
@@ -62,31 +66,32 @@
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
 }
 
 .badge-label {
   font-size: 0.6875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   margin-bottom: var(--space-xs);
 }
 
 .badge-value {
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text);
 }
 
-/* Days Section */
+/* ── Timeline ── */
 .days-section {
   margin-bottom: var(--space-2xl);
 }
 
 .section-title {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text);
   margin-bottom: var(--space-xl);
 }
@@ -101,8 +106,9 @@
   left: 20px;
   top: 0;
   bottom: 0;
-  width: 1px;
-  background: var(--color-border);
+  width: 2px;
+  background: linear-gradient(180deg, var(--color-accent-subtle), var(--color-border));
+  border-radius: 1px;
 }
 
 .day-card {
@@ -122,11 +128,12 @@
   background: var(--color-accent);
   border-radius: var(--radius-md);
   z-index: 1;
+  box-shadow: var(--shadow-accent);
 }
 
 .day-number {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
   color: white;
 }
 
@@ -136,17 +143,25 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.day-content:hover {
+  box-shadow: var(--shadow-md);
+  border-color: transparent;
 }
 
 .day-title {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text);
   margin-bottom: var(--space-lg);
   padding-bottom: var(--space-md);
   border-bottom: 1px solid var(--color-border);
 }
 
+/* ── Activities ── */
 .activities {
   display: flex;
   flex-direction: column;
@@ -159,7 +174,13 @@
   gap: var(--space-md);
   padding: var(--space-md);
   background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.activity:hover {
+  border-color: var(--color-border-light);
 }
 
 .activity-time {
@@ -168,10 +189,10 @@
 
 .time-label {
   font-size: 0.6875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .activity-details {
@@ -180,7 +201,7 @@
 
 .activity-details h4 {
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text);
   margin-bottom: var(--space-xs);
 }
@@ -189,6 +210,7 @@
   font-size: 0.8125rem;
   color: var(--color-accent);
   margin-bottom: var(--space-xs);
+  font-weight: 500;
 }
 
 .activity-details .tip {
@@ -197,21 +219,22 @@
   font-style: italic;
 }
 
-/* Meals */
+/* ── Meals ── */
 .meals {
   padding: var(--space-md);
   background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-md);
 }
 
 .meals h4 {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.6875rem;
+  font-weight: 700;
   color: var(--color-text-muted);
   margin-bottom: var(--space-sm);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .meals-grid {
@@ -223,15 +246,15 @@
 .meal-item {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: 3px;
 }
 
 .meal-type {
   font-size: 0.6875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .meal-rec {
@@ -241,14 +264,16 @@
 
 .day-cost {
   display: inline-flex;
-  padding: var(--space-xs) var(--space-sm);
+  padding: 4px 10px;
   background: var(--color-accent-muted);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-accent-subtle);
+  border-radius: var(--radius-full);
   font-size: 0.8125rem;
+  font-weight: 600;
   color: var(--color-accent);
 }
 
-/* Additional Info */
+/* ── Additional Info ── */
 .additional-info {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -261,20 +286,27 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
+  box-shadow: var(--shadow-xs);
+  transition: all var(--transition-fast);
+}
+
+.info-card:hover {
+  box-shadow: var(--shadow-sm);
 }
 
 .info-card.emergency {
-  border-color: var(--color-error);
+  border-color: rgba(220, 38, 38, 0.25);
+  background: linear-gradient(180deg, var(--color-bg-card) 0%, var(--color-error-muted) 100%);
 }
 
 .info-card h3 {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text);
   margin-bottom: var(--space-md);
 }
 
-/* Checklist */
+/* ── Checklist ── */
 .checklist {
   display: flex;
   flex-direction: column;
@@ -285,10 +317,10 @@
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-xs);
+  padding: 6px;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: background 0.15s ease;
+  transition: background var(--transition-fast);
 }
 
 .check-item:hover {
@@ -306,29 +338,36 @@
   color: var(--color-text-secondary);
 }
 
-/* Tips List */
+/* ── Tips List ── */
 .tips-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
 .tips-list li {
   position: relative;
-  padding: var(--space-xs) 0 var(--space-xs) var(--space-lg);
+  padding: 8px 12px 8px 28px;
   font-size: 0.8125rem;
   color: var(--color-text-secondary);
   line-height: 1.5;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
 }
 
 .tips-list li::before {
   content: '→';
   position: absolute;
-  left: 0;
-  color: var(--color-text-muted);
+  left: 10px;
+  color: var(--color-accent);
+  font-weight: 600;
 }
 
-/* Phrases */
+/* ── Phrases ── */
 .phrases-list {
   display: flex;
   flex-direction: column;
@@ -338,14 +377,15 @@
 .phrase-item {
   display: flex;
   justify-content: space-between;
-  padding: var(--space-sm);
+  padding: 8px 12px;
   background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
 }
 
 .phrase {
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text);
 }
 
@@ -354,7 +394,7 @@
   color: var(--color-text-muted);
 }
 
-/* Emergency Contacts */
+/* ── Emergency Contacts ── */
 .contacts-grid {
   display: flex;
   flex-direction: column;
@@ -364,8 +404,9 @@
 .contact-item {
   display: flex;
   justify-content: space-between;
-  padding: var(--space-sm);
+  padding: 8px 12px;
   background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
 }
 
@@ -376,11 +417,11 @@
 
 .contact-number {
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text);
 }
 
-/* Actions */
+/* ── Actions ── */
 .itinerary-actions {
   display: flex;
   justify-content: center;
@@ -388,33 +429,37 @@
   flex-wrap: wrap;
 }
 
-.action-btn {
-  padding: var(--space-md) var(--space-xl);
+.itinerary-actions .action-btn {
+  padding: 14px 28px;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: white;
   background: var(--color-accent);
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-accent);
 }
 
-.action-btn:hover {
+.itinerary-actions .action-btn:hover {
   background: var(--color-accent-hover);
+  transform: translateY(-1px);
 }
 
-.action-btn.secondary {
-  background: transparent;
+.itinerary-actions .action-btn.secondary {
+  background: var(--color-bg-card);
   color: var(--color-text);
   border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-xs);
 }
 
-.action-btn.secondary:hover {
-  background: var(--color-bg-card);
+.itinerary-actions .action-btn.secondary:hover {
+  border-color: var(--color-border-light);
+  box-shadow: var(--shadow-sm);
 }
 
-/* Error */
+/* ── Error ── */
 .itinerary-error {
   text-align: center;
   padding: var(--space-2xl);
@@ -423,6 +468,7 @@
   border-radius: var(--radius-lg);
   max-width: 400px;
   margin: var(--space-2xl) auto;
+  box-shadow: var(--shadow-sm);
 }
 
 .itinerary-error p {
@@ -431,24 +477,25 @@
   margin-bottom: var(--space-lg);
 }
 
-/* Print Styles */
+/* ── Print Styles ── */
 @media print {
   .itinerary-view {
     background: white;
     color: black;
   }
-  
+
   .back-btn,
   .itinerary-actions {
     display: none;
   }
-  
+
   .day-content,
   .info-card {
     break-inside: avoid;
   }
 }
 
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .itinerary-view {
     padding: var(--space-lg) var(--space-md);

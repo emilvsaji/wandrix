@@ -1,0 +1,96 @@
+/* ================================================================
+   STARTUP LOADER — Clean white & blue theme
+   ================================================================ */
+
+.startup-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: #0d1b3e;
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.startup-loader--exit {
+  opacity: 0;
+  transform: scale(1.04);
+  pointer-events: none;
+}
+
+.startup-loader__content {
+  width: min(88vw, 400px);
+  text-align: center;
+}
+
+.startup-loader__brand {
+  margin: 0 0 1.5rem;
+  font-family: 'Cormorant Garamond', 'Georgia', serif;
+  font-size: clamp(1.8rem, 4.5vw, 2.6rem);
+  letter-spacing: 0.38em;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #0d1b3e 0%, #1a5cff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.startup-loader__pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  border: 1px solid #e6eeff;
+  background: #f0f6ff;
+  min-width: 175px;
+}
+
+.startup-loader__text {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.875rem;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+  color: #6b7fa3;
+}
+
+.startup-loader__cursor {
+  width: 0.4rem;
+  height: 0.95rem;
+  border-radius: 3px;
+  background: #1a5cff;
+  animation: startup-loader-blink 0.9s steps(1, end) infinite;
+}
+
+.startup-loader__track {
+  margin: 1rem auto 0;
+  width: min(88vw, 240px);
+  height: 3px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e6eeff;
+}
+
+.startup-loader__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1a5cff 0%, #0a3bcc 100%);
+  transition: width 0.18s linear;
+}
+
+@keyframes startup-loader-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  46%,
+  100% {
+    opacity: 0;
+  }
+}

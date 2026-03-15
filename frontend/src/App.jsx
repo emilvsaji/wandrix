@@ -1,7 +1,9 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 import { AuthProvider } from './context/AuthContext';
+import { StartupLoadingProvider, useStartupLoading } from './context/StartupLoadingContext';
+import LoadingScreen from './components/LoadingScreen';
 import Header from './components/Header';
 import HomePage from './pages/HomePage';
 import ComparePage from './pages/ComparePage';
@@ -17,6 +19,11 @@ const LightPillar = lazy(() => import('./components/LightPillar'));
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { markAppReady } = useStartupLoading();
+
+  useEffect(() => {
+    markAppReady();
+  }, [markAppReady]);
 
   const handleGetStarted = (page) => {
     navigate(`/${page === 'home' ? '' : page}`);
@@ -137,11 +144,26 @@ function AppContent() {
   );
 }
 
+function AppShell() {
+  const { isLoading } = useStartupLoading();
+
+  return (
+    <>
+      <div className={`app-root-content ${isLoading ? 'app-root-content--hidden' : 'app-root-content--visible'}`}>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </div>
+      <LoadingScreen />
+    </>
+  );
+}
+
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <StartupLoadingProvider>
+      <AppShell />
+    </StartupLoadingProvider>
   );
 }
 

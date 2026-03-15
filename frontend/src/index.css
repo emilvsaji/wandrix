@@ -1,29 +1,51 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* ================================================================
+   WANDRIX — Global Design Tokens
+   Theme: Premium white & blue, luxury travel × modern SaaS
+   Fonts: Cormorant Garamond (display) + Plus Jakarta Sans (body)
+   ================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Professional dark color palette */
-  --color-bg: #0a0a0b;
-  --color-bg-elevated: #111113;
-  --color-bg-card: #18181b;
-  --color-border: #27272a;
-  --color-border-light: #3f3f46;
-  
-  /* Text colors */
-  --color-text: #fafafa;
-  --color-text-secondary: #a1a1aa;
-  --color-text-muted: #71717a;
-  
-  /* Accent - subtle blue */
-  --color-accent: #3b82f6;
-  --color-accent-hover: #2563eb;
-  --color-accent-muted: rgba(59, 130, 246, 0.1);
-  
-  /* Status colors */
-  --color-success: #22c55e;
-  --color-warning: #eab308;
-  --color-error: #ef4444;
-  
-  /* Spacing */
+  /* ── Background hierarchy ── */
+  --color-bg: #ffffff;
+  --color-bg-elevated: #f0f6ff;
+  --color-bg-card: #ffffff;
+  --color-bg-hover: #f0f6ff;
+  --color-bg-subtle: #f8fbff;
+
+  /* ── Border colors ── */
+  --color-border: #e6eeff;
+  --color-border-light: #dbeafe;
+  --color-border-hover: #1a5cff;
+
+  /* ── Text colors ── */
+  --color-text: #0d1b3e;
+  --color-text-secondary: #3d5280;
+  --color-text-muted: #6b7fa3;
+  --color-text-faint: #9bacc4;
+
+  /* ── Accent / Brand ── */
+  --color-accent: #1a5cff;
+  --color-accent-hover: #0a3bcc;
+  --color-accent-muted: #e6eeff;
+  --color-accent-subtle: #dbeafe;
+  --color-primary: #1a5cff;
+
+  /* ── Gold highlight ── */
+  --color-gold: #c8a96e;
+  --color-gold-soft: rgba(200, 169, 110, 0.12);
+
+  /* ── Status colors ── */
+  --color-success: #16a34a;
+  --color-success-muted: #f0fdf4;
+  --color-warning: #d97706;
+  --color-warning-muted: #fffbeb;
+  --color-error: #dc2626;
+  --color-error-muted: #fef2f2;
+
+  /* ── Spacing scale ── */
+  --space-2xs: 0.125rem;
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
@@ -31,17 +53,45 @@
   --space-xl: 2rem;
   --space-2xl: 3rem;
   --space-3xl: 4rem;
-  
-  /* Border radius */
+  --space-4xl: 6rem;
+
+  /* ── Border radius ── */
+  --radius-xs: 4px;
   --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* ── Shadows (blue-tinted) ── */
+  --shadow-xs: 0 1px 2px rgba(10, 59, 204, 0.04);
+  --shadow-sm: 0 1px 3px rgba(10, 59, 204, 0.06), 0 1px 2px rgba(10, 59, 204, 0.04);
+  --shadow-md: 0 4px 12px rgba(10, 59, 204, 0.06), 0 1px 3px rgba(10, 59, 204, 0.04);
+  --shadow-lg: 0 10px 25px rgba(10, 59, 204, 0.07), 0 4px 10px rgba(10, 59, 204, 0.04);
+  --shadow-xl: 0 20px 40px rgba(10, 59, 204, 0.08), 0 8px 16px rgba(10, 59, 204, 0.04);
+  --shadow-accent: 0 4px 14px rgba(26, 92, 255, 0.22);
+  --shadow-card-hover: 0 8px 30px rgba(10, 59, 204, 0.1), 0 2px 8px rgba(10, 59, 204, 0.04);
+
+  /* ── Glassmorphism ── */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(26, 92, 255, 0.12);
+  --glass-shadow: 0 8px 32px rgba(10, 59, 204, 0.08);
+
+  /* ── Transitions ── */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ── Font setup ── */
+  --font-display: 'Cormorant Garamond', 'Georgia', serif;
+  --font-body: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  font-family: var(--font-body);
   line-height: 1.6;
   font-weight: 400;
-  color-scheme: dark;
+  color-scheme: light;
   color: var(--color-text);
   background-color: var(--color-bg);
   font-synthesis: none;

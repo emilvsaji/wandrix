@@ -1,3 +1,4 @@
+/* ── Explore Page Component ── */
 .explore-page {
   padding: var(--space-2xl) var(--space-xl);
   max-width: 1200px;
@@ -11,10 +12,10 @@
 
 .explore-header h1 {
   font-size: 2rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text);
   margin-bottom: var(--space-sm);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
 .explore-header > p {
@@ -23,15 +24,16 @@
   margin-bottom: var(--space-xl);
 }
 
+/* ── Search Box ── */
 .search-box {
   position: relative;
-  max-width: 400px;
+  max-width: 440px;
   margin: 0 auto;
 }
 
 .search-icon {
   position: absolute;
-  left: var(--space-md);
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--color-text-muted);
@@ -39,25 +41,27 @@
 
 .search-box input {
   width: 100%;
-  padding: var(--space-md) var(--space-md) var(--space-md) 2.75rem;
+  padding: 13px 16px 13px 2.75rem;
   font-size: 0.9375rem;
   color: var(--color-text);
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   outline: none;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
 .search-box input:focus {
   border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(26, 92, 255, 0.1);
 }
 
 .search-box input::placeholder {
-  color: var(--color-text-muted);
+  color: var(--color-text-faint);
 }
 
-/* Destinations Grid */
+/* ── Destinations Grid ── */
 .destinations-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -71,10 +75,11 @@
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: var(--shadow-xs);
 }
 
 .wishlist-btn {
@@ -91,7 +96,7 @@
   border-radius: var(--radius-md);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
   z-index: 2;
 }
 
@@ -101,56 +106,61 @@
 }
 
 .wishlist-btn:hover {
-  color: #ef4444;
-  border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+  border-color: var(--color-error);
+  background: var(--color-error-muted);
 }
 
 .wishlist-btn.active {
-  color: #ef4444;
-  border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+  border-color: var(--color-error);
+  background: var(--color-error-muted);
 }
 
 .destination-tile:hover {
   border-color: var(--color-border-light);
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .tile-content h3 {
-  font-size: 1.125rem;
+  font-size: 1.0625rem;
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: var(--space-xs);
+  margin-bottom: 3px;
 }
 
 .tile-country {
   font-size: 0.8125rem;
-  color: var(--color-text-muted);
-  margin-bottom: var(--space-xs);
+  color: var(--color-accent);
+  font-weight: 500;
+  margin-bottom: 4px;
 }
 
 .tile-tagline {
   font-size: 0.8125rem;
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
 }
 
 .explore-arrow {
   color: var(--color-text-muted);
   font-size: 1.25rem;
-  transition: transform 0.15s ease;
+  transition: transform var(--transition-fast);
 }
 
 .destination-tile:hover .explore-arrow {
   transform: translateX(4px);
-  color: var(--color-text);
+  color: var(--color-accent);
 }
 
-/* Modal */
+/* ── Detail Modal ── */
 .destination-modal {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 11, 0.9);
+  background: rgba(13, 27, 62, 0.18);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -162,18 +172,19 @@
 .modal-content {
   position: relative;
   width: 100%;
-  max-width: 640px;
+  max-width: 660px;
   max-height: 90vh;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-2xl);
   overflow-y: auto;
+  box-shadow: var(--shadow-xl);
 }
 
 .modal-close {
   position: absolute;
-  top: var(--space-md);
-  right: var(--space-md);
+  top: 14px;
+  right: 14px;
   width: 32px;
   height: 32px;
   display: flex;
@@ -185,12 +196,13 @@
   border-radius: var(--radius-md);
   cursor: pointer;
   z-index: 10;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
 }
 
 .modal-close:hover {
   color: var(--color-text);
   border-color: var(--color-border-light);
+  box-shadow: var(--shadow-sm);
 }
 
 .modal-header {
@@ -201,9 +213,10 @@
 
 .modal-header h2 {
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text);
-  margin-bottom: var(--space-xs);
+  margin-bottom: 4px;
+  letter-spacing: -0.02em;
 }
 
 .modal-header p {
@@ -220,12 +233,12 @@
 }
 
 .loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 2px solid var(--color-border);
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--color-border);
   border-top-color: var(--color-accent);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.75s linear infinite;
   margin-bottom: var(--space-md);
 }
 
@@ -257,18 +270,18 @@
 }
 
 .highlight-section h3 {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   color: var(--color-text-muted);
   margin-bottom: var(--space-md);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 
 .history {
   font-size: 0.875rem;
   color: var(--color-text-secondary);
-  line-height: 1.6;
+  line-height: 1.65;
   margin-bottom: var(--space-md);
 }
 
@@ -276,17 +289,18 @@
 .dishes {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-xs);
+  gap: 6px;
 }
 
 .tag,
 .dish-tag {
-  padding: var(--space-xs) var(--space-sm);
+  padding: 4px 10px;
   font-size: 0.75rem;
+  font-weight: 500;
   color: var(--color-text-secondary);
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
 }
 
 .attractions-list {
@@ -298,21 +312,22 @@
 .attraction-card {
   padding: var(--space-md);
   background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
 
 .attraction-card h4 {
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text);
-  margin-bottom: var(--space-xs);
+  margin-bottom: 4px;
 }
 
 .attraction-card p {
   font-size: 0.8125rem;
   color: var(--color-text-secondary);
   line-height: 1.5;
-  margin-bottom: var(--space-xs);
+  margin-bottom: 4px;
 }
 
 .best-time {
@@ -325,23 +340,30 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
 }
 
 .gems-list li,
 .tips-list li {
   position: relative;
-  padding: var(--space-xs) 0 var(--space-xs) var(--space-lg);
+  padding: 8px 12px 8px 28px;
   font-size: 0.875rem;
   color: var(--color-text-secondary);
   line-height: 1.5;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
 }
 
 .gems-list li::before,
 .tips-list li::before {
   content: '→';
   position: absolute;
-  left: 0;
-  color: var(--color-text-muted);
+  left: 10px;
+  color: var(--color-accent);
+  font-weight: 600;
 }
 
 .modal-actions {
@@ -357,18 +379,19 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-md) var(--space-xl);
+  padding: 12px 24px;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
 }
 
 .action-btn.primary {
   color: white;
   background: var(--color-accent);
   border: none;
+  box-shadow: var(--shadow-accent);
 }
 
 .action-btn.primary:hover {
@@ -382,15 +405,15 @@
 }
 
 .action-btn.wishlist-action:hover {
-  color: #ef4444;
-  border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+  border-color: var(--color-error);
+  background: var(--color-error-muted);
 }
 
 .action-btn.wishlist-action.active {
-  color: #ef4444;
-  border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+  border-color: var(--color-error);
+  background: var(--color-error-muted);
 }
 
 .modal-error {

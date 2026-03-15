@@ -1,3 +1,4 @@
+/* ── Compare Page (component) ── */
 .compare-page {
   max-width: 1000px;
   margin: 0 auto;
@@ -11,10 +12,10 @@
 
 .compare-header h1 {
   font-size: 2rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text);
   margin-bottom: var(--space-sm);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
 .compare-header p {
@@ -39,42 +40,48 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text-muted);
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   margin-bottom: 2.5rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .back-to-form {
   display: inline-flex;
   align-items: center;
-  padding: var(--space-sm) var(--space-md);
+  gap: var(--space-xs);
+  padding: 8px 16px;
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--color-text-secondary);
-  background: transparent;
+  background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
   margin-bottom: var(--space-xl);
+  box-shadow: var(--shadow-xs);
 }
 
 .back-to-form:hover {
   color: var(--color-text);
-  background: var(--color-bg-card);
+  border-color: var(--color-border-light);
+  box-shadow: var(--shadow-sm);
 }
 
-/* Generating Overlay */
+/* ── Generating Overlay ── */
 .generating-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 11, 0.95);
+  background: rgba(250, 251, 252, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -84,15 +91,20 @@
 .generating-content {
   text-align: center;
   padding: var(--space-2xl);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-xl);
+  max-width: 360px;
 }
 
 .generating-spinner {
-  width: 48px;
-  height: 48px;
-  border: 2px solid var(--color-border);
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--color-border);
   border-top-color: var(--color-accent);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.75s linear infinite;
   margin: 0 auto var(--space-lg);
 }
 
@@ -103,10 +115,10 @@
 }
 
 .generating-content h3 {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: var(--space-sm);
+  margin-bottom: var(--space-xs);
 }
 
 .generating-content p {
@@ -129,8 +141,8 @@
   }
 
   .vs-badge {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     margin: 0 auto;
   }
 }
